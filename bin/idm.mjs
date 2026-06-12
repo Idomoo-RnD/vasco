@@ -12,7 +12,7 @@
 // the vendored codec uses legacy Buffer() constructors — silence the noise for users
 process.noDeprecation = true;
 
-import { readFileSync, writeFileSync, mkdirSync, renameSync, chmodSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, renameSync, chmodSync, unlinkSync, existsSync } from 'fs';
 import { resolve, dirname, basename, join } from 'path';
 import { homedir } from 'os';
 import { createInterface } from 'readline';
@@ -324,21 +324,34 @@ async function main() {
         }
 
         case 'skill': {
-            if (args[1] !== 'install') fail('Usage: idm skill install   (installs the idm-maker authoring skill into ~/.claude/skills)');
-            const dest = join(homedir(), '.claude', 'skills', 'idm-maker');
+            if (args[1] !== 'install')
+                fail('Usage: idm skill install [--claude] [--codex]   (installs the idm-maker authoring skill for Claude Code and/or OpenAI Codex)');
+            // Claude Code reads ~/.claude/skills, OpenAI Codex reads ~/.codex/skills —
+            // same SKILL.md format. Default: Claude Code always, Codex when ~/.codex exists.
+            const wantClaude = flag('--claude') || !flag('--codex');
+            const wantCodex = flag('--codex') || (!flag('--claude') && existsSync(join(homedir(), '.codex')));
+            const targets = [];
+            if (wantClaude) targets.push(join(homedir(), '.claude', 'skills', 'idm-maker'));
+            if (wantCodex) targets.push(join(homedir(), '.codex', 'skills', 'idm-maker'));
             const files = ['SKILL.md', 'references/format.md'];
             try {
+                const contents = [];
                 for (const f of files) {
                     const r = await fetch(`${RAW}/skills/idm-maker/${f}`);
                     if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
-                    const path = join(dest, f);
-                    mkdirSync(dirname(path), { recursive: true });
-                    writeFileSync(path, await r.text());
+                    contents.push([f, await r.text()]);
                 }
+                for (const dest of targets)
+                    for (const [f, text] of contents) {
+                        const path = join(dest, f);
+                        mkdirSync(dirname(path), { recursive: true });
+                        writeFileSync(path, text);
+                    }
             } catch (e) {
                 fail(`Skill install failed: ${e.message}`, 2);
             }
-            out({ ok: true, installed: dest }, `✅ installed idm-maker skill to ${dest}`);
+            out({ ok: true, installed: targets },
+                targets.map(t => `✅ installed idm-maker skill to ${t}`).join('\n'));
             break;
         }
 

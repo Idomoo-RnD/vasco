@@ -7,6 +7,8 @@
 # Options (env vars): IDM_VERSION (tag, default latest), IDM_INSTALL_DIR
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 $Repo = 'Idomoo-RnD/vasco'
 $Version = if ($env:IDM_VERSION) { $env:IDM_VERSION } else { 'latest' }
@@ -24,8 +26,13 @@ New-Item -ItemType Directory -Force $Tmp | Out-Null
 
 try {
     Write-Host "Downloading $Asset ($Version) ..."
-    Invoke-WebRequest -Uri "$Base/$Asset" -OutFile (Join-Path $Tmp $Asset)
-    Invoke-WebRequest -Uri "$Base/checksums.txt" -OutFile (Join-Path $Tmp 'checksums.txt')
+    try {
+        Invoke-WebRequest -Uri "$Base/$Asset" -OutFile (Join-Path $Tmp $Asset)
+        Invoke-WebRequest -Uri "$Base/checksums.txt" -OutFile (Join-Path $Tmp 'checksums.txt')
+    } catch {
+        Write-Error ("Download failed from $Base/$Asset — has a release been published yet? " +
+            "Check https://github.com/$Repo/releases  ($($_.Exception.Message))")
+    }
 
     $expected = (Select-String -Path (Join-Path $Tmp 'checksums.txt') -Pattern ([regex]::Escape($Asset))).Line.Split(' ')[0]
     $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $Tmp $Asset)).Hash.ToLower()

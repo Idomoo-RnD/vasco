@@ -124,7 +124,29 @@ The 30-second version: layers render bottom-first; times are seconds; colors are
 Two skills ship in this repo:
 
 - **[SKILL.md](SKILL.md)** (repo root) — teaches an agent to drive this CLI.
-- **[skills/idm-maker/](skills/idm-maker/)** — the full authoring skill: scene format, tween engine, effects, masks, render workflow. Installed by `idm skill install` or the install scripts.
+- **[skills/idm-maker/](skills/idm-maker/)** — the full authoring skill: scene format, tween engine, effects, masks, render workflow.
+
+### Claude Code
+
+```bash
+idm skill install            # -> ~/.claude/skills/idm-maker
+```
+
+(The install scripts already run this for you.) Then just ask Claude Code to *"make an idm of …"* — the skill triggers, writes the scene JSON, and drives `idm`. Manual alternative: copy `skills/idm-maker/` into `~/.claude/skills/`.
+
+### OpenAI Codex
+
+Codex reads the same SKILL.md format from `~/.codex/skills`:
+
+```bash
+idm skill install --codex    # -> ~/.codex/skills/idm-maker
+```
+
+(`idm skill install` with no flags installs for Claude Code, and for Codex too when a `~/.codex` directory exists.) Manual alternative: copy `skills/idm-maker/` into `~/.codex/skills/`.
+
+### Other agents
+
+Point the agent at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — they are plain markdown with no tooling assumptions.
 
 ## License
 
