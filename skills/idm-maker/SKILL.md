@@ -77,3 +77,4 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 - Sub-comps that reference other sub-comps must be declared after the comps they reference inside `comps` (the main scene may reference any of them).
 - Anything not listed in the reference passes through verbatim as raw VASCO, so every engine capability is reachable.
 - Comp max dimension is 1920 on each axis.
+- **Personalized videos**: every layer is an API-replaceable placeholder keyed by its name. If the user says the video is personal/personalized, read the *Personalization* and *Graphs & charts* sections in [references/format.md](references/format.md) — size text boxes and media slots for varying content, and treat graphs as swappable images where the animation reveals whatever data the image carries.
