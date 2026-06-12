@@ -7,7 +7,22 @@ description: Author Idomoo IDM video files locally from a compact scene JSON, co
 
 Turn a short "scene" JSON into a full VASCO project, compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
 
-**CLI:** `idm` — standalone binary, no runtime needed. Install: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`). Verify with `idm version`.
+## Setup — check BEFORE installing anything
+
+The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaScript runtime — **never install Node.js, npm, or any other runtime for it**.
+
+1. **Check it first**: run `idm version`. If it prints a version, the CLI is ready — skip all setup. Also try `~/.local/bin/idm version` (Linux/macOS) and `%LOCALAPPDATA%\Programs\idm\idm.exe version` (Windows) in case it is installed but not on PATH.
+2. **Only if missing**, install the binary:
+   - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (in sandboxes/agents set `IDM_SKILL=skip` to suppress the interactive skill prompt)
+   - Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`
+   - Or download the platform binary directly from https://github.com/Idomoo-RnD/vasco/releases/latest (`idm_linux_amd64`, `idm_linux_arm64`, `idm_darwin_arm64`, `idm_darwin_amd64`, `idm_windows_amd64.exe`), `chmod +x` it, and run it by path — no further setup.
+3. **Test it works** (offline, no assets/credentials needed — exit 0 means the toolchain is good):
+
+   ```bash
+   idm version
+   echo '{"width":1280,"height":720,"fps":25,"duration":1,"layers":[{"type":"solid","color":"#102040"}]}' > /tmp/t.json
+   idm validate /tmp/t.json
+   ```
 
 ## Workflow
 

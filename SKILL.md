@@ -7,7 +7,7 @@ description: "Author Idomoo IDM videos from compact scene JSON via the `idm` CLI
 
 CLI for authoring Idomoo IDM videos. A compact scene JSON (keyframe tweens, inline effects/masks, hex colors) compiles locally into a binary `.idm`, schema-validated; `render` uploads it and returns an MP4.
 
-- **Install** (standalone binary, no runtime): `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` — Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`
+- **Setup**: run `idm version` FIRST — if it answers, the CLI is installed; skip setup. The CLI is a **standalone self-contained binary** — never install Node.js/npm for it. If missing: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`), or grab the platform binary straight from https://github.com/Idomoo-RnD/vasco/releases/latest and run it by path.
 - **Auth**: `idm auth login --account <id> --token <secret>` or env `IDOMOO_ACCOUNT_ID` / `IDOMOO_SECRET_KEY`. Credentials are provisioned per Idomoo account.
 - **Authoring guide**: the full scene format lives in the `idm-maker` skill (`idm skill install` puts it in `~/.claude/skills`), or read `skills/idm-maker/` in this repo.
 
