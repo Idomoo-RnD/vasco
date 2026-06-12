@@ -150,6 +150,16 @@ idm skill install --codex    # -> ~/.codex/skills/idm-maker
 
 (`idm skill install` with no flags installs for Claude Code, and for Codex too when a `~/.codex` directory exists.) Manual alternative: copy `skills/idm-maker/` into `~/.codex/skills/`.
 
+### Cursor
+
+Cursor reads the same SKILL.md format from `.cursor/skills`:
+
+```bash
+idm skill install --cursor   # -> ~/.cursor/skills/idm-maker (+ ./.cursor/skills when run inside a Cursor project)
+```
+
+For a team project, commit `.cursor/skills/idm-maker/` to the repo so everyone gets it. (`idm skill install` with no flags also targets Cursor automatically when `~/.cursor` exists.)
+
 ### Claude Cowork / claude.ai
 
 Cowork takes skills as a ZIP uploaded in the app rather than from a folder:

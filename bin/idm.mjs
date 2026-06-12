@@ -326,17 +326,26 @@ async function main() {
 
         case 'skill': {
             if (args[1] !== 'install')
-                fail('Usage: idm skill install [--claude] [--codex] [--cowork]   (Claude Code / OpenAI Codex dirs, or a ZIP for Claude Cowork)');
-            // Claude Code reads ~/.claude/skills, OpenAI Codex reads ~/.codex/skills —
-            // same SKILL.md format. Claude Cowork / claude.ai take the skill as a ZIP
-            // uploaded in the app, so --cowork packages one instead of copying files.
-            const anyFlag = flag('--claude') || flag('--codex') || flag('--cowork');
+                fail('Usage: idm skill install [--claude] [--codex] [--cursor] [--cowork]   (agent skill dirs, or a ZIP for Claude Cowork)');
+            // Same SKILL.md format everywhere: Claude Code reads ~/.claude/skills,
+            // OpenAI Codex ~/.codex/skills, Cursor ~/.cursor/skills (personal) and
+            // .cursor/skills in a project. Claude Cowork / claude.ai take the skill
+            // as a ZIP uploaded in the app, so --cowork packages one instead.
+            const anyFlag = flag('--claude') || flag('--codex') || flag('--cursor') || flag('--cowork');
             const wantClaude = flag('--claude') || !anyFlag;
             const wantCodex = flag('--codex') || (!anyFlag && existsSync(join(homedir(), '.codex')));
+            const wantCursor = flag('--cursor') || (!anyFlag && existsSync(join(homedir(), '.cursor')));
             const wantCowork = flag('--cowork');
             const targets = [];
             if (wantClaude) targets.push(join(homedir(), '.claude', 'skills', 'idm-maker'));
             if (wantCodex) targets.push(join(homedir(), '.codex', 'skills', 'idm-maker'));
+            if (wantCursor) {
+                targets.push(join(homedir(), '.cursor', 'skills', 'idm-maker'));
+                // also drop it into the current project when it is Cursor-enabled
+                const projCursor = resolve('.cursor');
+                if (existsSync(projCursor) && projCursor !== join(homedir(), '.cursor'))
+                    targets.push(join(projCursor, 'skills', 'idm-maker'));
+            }
             const files = ['SKILL.md', 'references/format.md'];
             const messages = [];
             try {
@@ -445,9 +454,10 @@ Usage:
   idm init     [scene.json]                          write a starter scene
   idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
   idm schema                                         print the VASCO JSON Schema
-  idm skill    install [--claude] [--codex] [--cowork]
+  idm skill    install [--claude] [--codex] [--cursor] [--cowork]
                                                      install the idm-maker agent skill: Claude Code
                                                      (~/.claude/skills), OpenAI Codex (~/.codex/skills),
+                                                     Cursor (~/.cursor/skills + project .cursor/skills),
                                                      or package a ZIP to upload into Claude Cowork
   idm update                                         self-update to the latest release
   idm version

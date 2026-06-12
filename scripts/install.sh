@@ -79,31 +79,40 @@ SKILL_CHOICE="${IDM_SKILL:-}"
 if [ -z "$SKILL_CHOICE" ]; then
   if [ -r /dev/tty ] && [ -w /dev/tty ]; then
     log ""
-    log "Install the idm-maker agent skill?"
-    log "  1) Claude Code   (~/.claude/skills)"
-    log "  2) OpenAI Codex  (~/.codex/skills)"
-    log "  3) Both"
-    log "  4) Skip"
+    log "Install the idm-maker agent skill? (multiple allowed, e.g. 1,3)"
+    log "  1) Claude Code    (~/.claude/skills)"
+    log "  2) OpenAI Codex   (~/.codex/skills)"
+    log "  3) Cursor         (~/.cursor/skills + project .cursor/skills)"
+    log "  4) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)"
+    log "  5) All of the above"
+    log "  6) Skip"
     printf 'Choice [1]: ' > /dev/tty
-    read -r answer < /dev/tty || answer=""
-    case "$answer" in
-      2) SKILL_CHOICE="codex" ;;
-      3) SKILL_CHOICE="both" ;;
-      4) SKILL_CHOICE="skip" ;;
-      *) SKILL_CHOICE="claude" ;;
-    esac
+    read -r SKILL_CHOICE < /dev/tty || SKILL_CHOICE=""
+    [ -n "$SKILL_CHOICE" ] || SKILL_CHOICE="1"
   else
-    SKILL_CHOICE="auto"   # non-interactive: Claude Code (+ Codex when ~/.codex exists)
+    SKILL_CHOICE="auto"   # non-interactive: Claude Code (+ Codex/Cursor when their dirs exist)
   fi
 fi
 
-case "$SKILL_CHOICE" in
-  claude) "$INSTALL_DIR/idm" skill install --claude || log "(skill install skipped — rerun with: idm skill install)" ;;
-  codex)  "$INSTALL_DIR/idm" skill install --codex  || log "(skill install skipped — rerun with: idm skill install --codex)" ;;
-  both)   "$INSTALL_DIR/idm" skill install --claude --codex || log "(skill install skipped — rerun with: idm skill install --claude --codex)" ;;
-  skip)   log "Skipped skill install (rerun anytime with: idm skill install)" ;;
-  *)      "$INSTALL_DIR/idm" skill install || log "(skill install skipped — rerun with: idm skill install)" ;;
-esac
+FLAGS=""
+case ",$SKILL_CHOICE," in *,6,*|*skip*) FLAGS="skip" ;; esac
+if [ "$FLAGS" != "skip" ]; then
+  case ",$SKILL_CHOICE," in *,1,*|*claude*) FLAGS="$FLAGS --claude" ;; esac
+  case ",$SKILL_CHOICE," in *,2,*|*codex*)  FLAGS="$FLAGS --codex"  ;; esac
+  case ",$SKILL_CHOICE," in *,3,*|*cursor*) FLAGS="$FLAGS --cursor" ;; esac
+  case ",$SKILL_CHOICE," in *,4,*|*cowork*) FLAGS="$FLAGS --cowork" ;; esac
+  case ",$SKILL_CHOICE," in *,5,*|*all*)    FLAGS=" --claude --codex --cursor --cowork" ;; esac
+  case ",$SKILL_CHOICE," in *both*)         FLAGS=" --claude --codex" ;; esac
+fi
+
+if [ "$FLAGS" = "skip" ]; then
+  log "Skipped skill install (rerun anytime with: idm skill install)"
+elif [ -n "$FLAGS" ]; then
+  # shellcheck disable=SC2086
+  "$INSTALL_DIR/idm" skill install $FLAGS || log "(skill install skipped — rerun with: idm skill install$FLAGS)"
+else
+  "$INSTALL_DIR/idm" skill install || log "(skill install skipped — rerun with: idm skill install)"
+fi
 
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
