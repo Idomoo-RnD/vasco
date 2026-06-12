@@ -4,7 +4,8 @@
 #
 #   irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
 #
-# Options (env vars): IDM_VERSION (tag, default latest), IDM_INSTALL_DIR
+# Options (env vars): IDM_VERSION (tag, default latest), IDM_INSTALL_DIR,
+#   IDM_SKILL = claude | codex | both | skip | auto (default: ask when interactive)
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -52,7 +53,35 @@ try {
     }
 
     Write-Host "Installed $exe ($(& $exe version))"
-    & $exe skill install
+
+    $skillChoice = $env:IDM_SKILL
+    if (-not $skillChoice) {
+        if ([Environment]::UserInteractive) {
+            Write-Host ''
+            Write-Host 'Install the idm-maker agent skill?'
+            Write-Host '  1) Claude Code   (~\.claude\skills)'
+            Write-Host '  2) OpenAI Codex  (~\.codex\skills)'
+            Write-Host '  3) Both'
+            Write-Host '  4) Skip'
+            $answer = ''
+            try { $answer = Read-Host 'Choice [1]' } catch { $answer = '' }
+            $skillChoice = switch ($answer) {
+                '2' { 'codex' }
+                '3' { 'both' }
+                '4' { 'skip' }
+                default { 'claude' }
+            }
+        } else {
+            $skillChoice = 'auto'
+        }
+    }
+    switch ($skillChoice) {
+        'claude' { & $exe skill install --claude }
+        'codex'  { & $exe skill install --codex }
+        'both'   { & $exe skill install --claude --codex }
+        'skip'   { Write-Host 'Skipped skill install (rerun anytime with: idm skill install)' }
+        default  { & $exe skill install }
+    }
 
     Write-Host ''
     Write-Host 'Next steps:'

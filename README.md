@@ -50,7 +50,7 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
 ```
 
-Both download the platform binary from [releases](https://github.com/Idomoo-RnD/vasco/releases), verify its checksum, install it (`~/.local/bin/idm` on Unix, `%LOCALAPPDATA%\Programs\idm\idm.exe` on Windows), and install the `idm-maker` agent skill into `~/.claude/skills`.
+Both download the platform binary from [releases](https://github.com/Idomoo-RnD/vasco/releases), verify its checksum, install it (`~/.local/bin/idm` on Unix, `%LOCALAPPDATA%\Programs\idm\idm.exe` on Windows), then **ask where to install the agent skill** — Claude Code, OpenAI Codex, both, or skip. Non-interactive runs (CI) default to Claude Code (+ Codex when `~/.codex` exists); override with `IDM_SKILL=claude|codex|both|skip`.
 
 From source instead (Node ≥ 18): `git clone` this repo, `npm install`, then `node bin/idm.mjs` — or `node scripts/build-sea.mjs` to produce your own binary.
 

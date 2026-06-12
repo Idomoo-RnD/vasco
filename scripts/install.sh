@@ -8,6 +8,7 @@
 # Options (env vars):
 #   INSTALL_DIR   target directory (default ~/.local/bin)
 #   IDM_VERSION   tag to install, e.g. v1.0.0 (default: latest)
+#   IDM_SKILL     claude | codex | both | skip | auto  (default: ask when on a TTY, else auto)
 
 set -euo pipefail
 
@@ -72,7 +73,37 @@ mkdir -p "$INSTALL_DIR"
 install -m 755 "$TMP/$ASSET" "$INSTALL_DIR/idm"
 log "Installed $INSTALL_DIR/idm ($("$INSTALL_DIR/idm" version))"
 
-"$INSTALL_DIR/idm" skill install || log "(skill install skipped — rerun later with: idm skill install)"
+# --- agent skill -------------------------------------------------------------
+# When piped through `curl | bash`, stdin is the script — prompt via /dev/tty.
+SKILL_CHOICE="${IDM_SKILL:-}"
+if [ -z "$SKILL_CHOICE" ]; then
+  if [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    log ""
+    log "Install the idm-maker agent skill?"
+    log "  1) Claude Code   (~/.claude/skills)"
+    log "  2) OpenAI Codex  (~/.codex/skills)"
+    log "  3) Both"
+    log "  4) Skip"
+    printf 'Choice [1]: ' > /dev/tty
+    read -r answer < /dev/tty || answer=""
+    case "$answer" in
+      2) SKILL_CHOICE="codex" ;;
+      3) SKILL_CHOICE="both" ;;
+      4) SKILL_CHOICE="skip" ;;
+      *) SKILL_CHOICE="claude" ;;
+    esac
+  else
+    SKILL_CHOICE="auto"   # non-interactive: Claude Code (+ Codex when ~/.codex exists)
+  fi
+fi
+
+case "$SKILL_CHOICE" in
+  claude) "$INSTALL_DIR/idm" skill install --claude || log "(skill install skipped — rerun with: idm skill install)" ;;
+  codex)  "$INSTALL_DIR/idm" skill install --codex  || log "(skill install skipped — rerun with: idm skill install --codex)" ;;
+  both)   "$INSTALL_DIR/idm" skill install --claude --codex || log "(skill install skipped — rerun with: idm skill install --claude --codex)" ;;
+  skip)   log "Skipped skill install (rerun anytime with: idm skill install)" ;;
+  *)      "$INSTALL_DIR/idm" skill install || log "(skill install skipped — rerun with: idm skill install)" ;;
+esac
 
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
