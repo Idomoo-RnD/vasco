@@ -1,0 +1,194 @@
+# Compact scene format — full reference
+
+Compiled by `idm compile <scene.json>` into VASCO, schema-validated, then encoded to `.idm`.
+
+Contents: [Scene](#scene) · [Layers](#layers-common) · [Text](#text) · [Image/Video](#image--video-media) · [Solid](#solid) · [Audio](#audio) · [Comp layers](#sub-compositions) · [Camera](#camera) · [Tweens](#tween-engine-animate) · [Effects](#effects) · [Masks](#masks) · [Track mattes](#track-mattes) · [Passthrough](#raw-vasco-passthrough)
+
+## Scene
+
+```json
+{
+  "width": 1280, "height": 720,      // max 1920 each
+  "fps": 25,                          // 1..120, default 25
+  "duration": 4,                      // seconds → num_of_frames (or set "num_of_frames")
+  "name": "main",
+  "layers": [ ... ],                  // bottom-first: first layer is the background
+  "comps": { "card": { /* same shape as scene */ } }   // optional sub-compositions
+}
+```
+
+Passthrough at comp level: `shutter_angle`, `shutter_phase`, `transition`.
+
+## Layers (common)
+
+| key | meaning |
+|---|---|
+| `type` | `text` `image` `video` `solid` `audio` `comp` `camera` (`media` also accepted, type sniffed from extension) |
+| `name` | layer name (needed for matte references) |
+| `start` / `duration` | seconds → `first_frame` / `num_of_frames` (frame-exact keys also accepted). Default: starts at 0, runs to comp end |
+| `box` | `[x, y, w, h]` → bounds. Default: full comp. (visual layers only) |
+| `position` | `[x,y]` or `[x,y,z]` — where the anchor lands (comp coords); defaults to `anchor`, so it's a plain offset when no anchor is set |
+| `scale` | number (uniform) or `[sx,sy]` / `[sx,sy,sz]` |
+| `rotation` | degrees (Z) or `[xDeg,yDeg,zDeg]` |
+| `anchor` | `[x,y]` or `[x,y,z]` — scale/rotation pivot, in comp coords (typically the layer's visual center). Baked into the matrix: `T(position)·R·S·T(−anchor)` |
+| `opacity` | 0..1 |
+| `blend` | blend mode: `normal add subtract multiply divide screen darken lighten difference exclusion overlay hardmix colordodge colorburn lineardodge linearburn linearlight vividlight pinlight hardlight softlight luminosity hue saturation color` |
+| `fit` | `"fit"` / `"fill"` or `{x, y, scale, scale_type}` — content alignment in box (media/solid/comp) |
+| `animate` | tween channels, see below |
+| `effects` | inline effect list, see below |
+| `mask` | inline mask, see below |
+| `matte` | track matte, see below |
+
+Position/scale/rotation compose to the VASCO 4×4 `transform`. Scaling/rotation pivot on `anchor`.
+
+## Text
+
+```json
+{ "type": "text", "text": "Hello", "font": "./arial.ttf", "size": 96,
+  "color": "#ffffff", "box": [0,0,1280,200], "align": "center middle",
+  "tracking": 0, "leading": 1.2, "breakline": false, "shrink": true, "min_size": 0,
+  "rtl": false, "ellipsis": "…" }
+```
+
+- `font` (required): path to .ttf/.otf — deduped into the asset table.
+- `align`: words from `left center right` + `top middle baseline bottom`, e.g. `"center middle"`, or `{"h": "center", "v": "top"}`.
+- **Rich spans** — `"styles": [{ "start": 0, "length": 5, "font": "./bold.ttf", "size": 60, "color": "#ff0000", "bold": true, "italic": true, "underline": true, "strikethrough": true, "highlight": "#ffff0080", "tracking": 0, "leading": 1.2, "shift": 0 }]` (`font` optional — defaults to the layer font).
+- **Per-character animators** (After-Effects-style): `"animators": [...]` — raw VASCO `IdmTextAnimator` objects, but `color` accepts hex and any object may carry `animate`. Example, words fading in one by one:
+
+```json
+"animators": [{
+  "opacity": 0, "position": [0, 40, 0],
+  "ranges": [{ "based_on": "words", "shape": "ramp_up",
+    "animate": { "start": [{"t":0,"v":0},{"t":2,"v":1,"ease":"outQuad"}],
+                 "end":   [{"t":0,"v":0.25},{"t":2,"v":1.25}] } }]
+}]
+```
+
+Animator offsets (`opacity`, `position`, `scale`, `rotation`, `color`, `tracking`, `skew`, …) apply to the characters selected by `ranges`; animate the range `start`/`end`/`offset` to sweep the selection. Range options: `based_on` (`characters` `characters_excluding_spaces` `words` `lines`), `mode`, `shape` (`square ramp_up ramp_down triangle round smooth`), `units`, `randomize_order`.
+
+## Image / Video (media)
+
+```json
+{ "type": "image", "src": "./photo.jpg", "box": [0,0,1280,720], "fit": "fill" }
+{ "type": "video", "src": "./clip.mp4", "loop": true, "offset_frame": 0 }
+```
+
+`loop: true|false` → `playback_mode` loop/cut (or pass `playback_mode`: `cut loop hold`). Extensions sniffed: png/jpg/jpeg/webp/bmp/gif/tif → image; mp4/mov/avi/webm/mkv/m4v → video.
+
+## Solid
+
+```json
+{ "type": "solid", "color": "#10204a", "box": [0,500,1280,140], "opacity": 0.6 }
+```
+
+## Audio
+
+```json
+{ "type": "audio", "src": "./music.mp3", "volume": -6, "ducking": true, "start": 0, "duration": 10 }
+```
+
+`volume` in dB; `ducking` → `sidechain_compression` (auto-lower under voice).
+
+## Sub-compositions
+
+Define under scene `comps`, instantiate with a comp layer; reuse freely:
+
+```json
+"layers": [ { "type": "comp", "comp": "card", "box": [340,160,600,400],
+              "animate": { "rotation": [{"t":0,"v":-8},{"t":3,"v":8,"ease":"inOutSine"}] } } ],
+"comps":  { "card": { "width": 600, "height": 400, "duration": 3, "layers": [ ... ] } }
+```
+
+If a sub-comp contains a comp layer referencing another sub-comp, declare the referenced one **earlier** in `comps`.
+
+## Camera
+
+```json
+{ "type": "camera", "fov": 70, "position": [640,360,-800],
+  "animate": { "position": [ {"t":0,"v":[640,360,-800]}, {"t":3,"v":[640,360,-600],"ease":"inOutQuad"} ] } }
+```
+
+Only affects layers with `"is_3d": true` (passthrough key). `zoom` is an animatable channel.
+
+## Tween engine (`animate`)
+
+Each channel is a keyframe array; the CLI bakes per-frame values at comp fps over the layer's duration.
+
+```json
+"animate": { "<channel>": [ { "t": 0.5, "v": <value>, "ease": "outCubic" }, ... ] }
+```
+
+- `t` = seconds (or `f` = frames), **relative to the layer's start**.
+- `ease` shapes the segment *leaving* that keyframe; if omitted, the next keyframe's ease applies; else linear. `hold` freezes until the next keyframe.
+- Easings: `linear`, `hold`, `in|out|inOut` + `Quad Cubic Quart Quint Sine Expo Circ Back Elastic Bounce` (any of `outCubic` / `ease-out-cubic` / `easeOutCubic` spellings), or cubic-bezier `[x1,y1,x2,y2]`.
+- Before the first / after the last keyframe the value clamps.
+
+Channels on layers:
+
+| channel | value | notes |
+|---|---|---|
+| `position` `scale` `rotation` `anchor` | as the static keys | baked together into one matrix animation; unanimated ones take their static value |
+| `opacity` | 0..1 | |
+| `color` | hex or `[r,g,b]` | solids / text tint |
+| `visible` | bool | holds between keys |
+| `zoom` | number | camera |
+| *anything else* | raw VASCO value | passed to that channel name verbatim |
+
+`animate` also works inside effects, mask shapes, and text animators/ranges (channels listed in those sections). Vectors, colors, and even mask shapes interpolate; booleans/strings hold.
+
+## Effects
+
+```json
+"effects": [
+  { "type": "blur", "amount": 8, "dimensions": "both", "repeat_edge": false,
+    "animate": { "amount": [ {"t":0,"v":0}, {"t":1,"v":8} ] } },
+  { "type": "shadow",  "color": "#000000cc", "opacity": 0.75, "angle": 120, "distance": 40, "spread": 0, "size": 5 },
+  { "type": "glow",    "color": "#ffff00", "opacity": 0.75, "spread": 0, "size": 5, "range": 0.5 },
+  { "type": "stroke",  "color": "#331a00", "size": 3, "position": "outside" },
+  { "type": "overlay", "color": "#ff000080", "blend": "overlay", "opacity": 1 },
+  { "type": "corner_pin",
+    "from": [[0,0],[1280,0],[0,720],[1280,720]],
+    "to":   [[100,50],[1180,90],[80,700],[1200,680]],
+    "crop": 0,
+    "animate": { "to.upper_left": [ {"t":0,"v":[100,50]}, {"t":2,"v":[0,0]} ] } }
+]
+```
+
+- `shadow`/`glow`/`stroke`/`overlay` merge into one layer-styles effect per layer. Animatable channels inside them: their own keys (`color`, `opacity`, `distance`, `size`, …) — the CLI prefixes the VASCO path (`drop_shadow.color` etc.).
+- Corner-pin pins order: `[upper_left, upper_right, lower_left, lower_right]` (or `{ul, ur, ll, lr}`).
+- Raw VASCO effects pass through when given a `name` instead of `type` (e.g. `{"name": "blur", "blurriness": 5, "dimensions": "both", "repeat_edge_pixels": false}`), still with `animate` support.
+
+## Masks
+
+```json
+"mask": { "rect": [0, 500, 1280, 140], "feather": 12 }                  // single shape
+"mask": { "shapes": [                                                    // multi-shape
+  { "ellipse": [640, 360, 200, 120], "feather": [10, 10], "inverted": false,
+    "opacity": 1, "expansion": 0, "blend": "add",
+    "animate": { "shape": [ {"t":0,"v":{"ellipse":[640,360,60,60]}},
+                            {"t":2,"v":{"ellipse":[640,360,200,120]},"ease":"inOutCubic"} ] } },
+  { "path": [[100,100],[400,100],[250,350]], "closed": true },
+  { "shape": [ {"type":"move_to","values":[0,0]}, {"type":"cubic_to","values":[10,0,20,10,20,20]} ] }
+] }
+```
+
+Shapes: `rect [x,y,w,h]` · `ellipse [cx,cy,rx,ry]` · `path [[x,y],...]` (`closed` defaults true) · `shape` = raw VASCO commands (`move_to`/`line_to` 2 values, `quadratic_to` 4, `cubic_to` 6). Mask blend modes: `none add subtract intersect lighten darken difference`. Shape keyframes interpolate (morph) when both ends have the same structure.
+
+## Track mattes
+
+The matte source must be a layer (usually `"visible": false`) in the same comp; reference it by name:
+
+```json
+{ "type": "text", "name": "matte-text", "text": "MATTE", "visible": false, ... },
+{ "type": "image", "src": "./photo.jpg", "matte": { "type": "alpha", "source": "matte-text" } }
+```
+
+Types: `alpha alpha_inverted luma luma_inverted`.
+
+## Colors
+
+Hex anywhere a color is expected: `#rgb`, `#rrggbb`, `#rrggbbaa`. Layer/text-style colors are RGB (alpha dropped); effect and animator colors keep alpha. Raw `[r,g,b(,a)]` arrays (0..1 floats) also accepted.
+
+## Raw VASCO passthrough
+
+Any layer/comp key not consumed by the sugar above is copied verbatim into the compiled VASCO — e.g. `is_3d`, `motion_blur`, `placeholder`, `offset_frame`, `track_matte`, `playback_mode`, `duration_referrer`, `baseline`, `field_of_view`, `shutter_angle`. The compiled doc is validated against the official schema (`C:\idomoo\idm_cli\idm_vasco\vasco.schema.json`), so typos are caught before encoding. Use `validate --print` or `compile --vasco` to see the generated VASCO.

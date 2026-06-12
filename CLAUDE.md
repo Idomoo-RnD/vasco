@@ -1,0 +1,3 @@
+# IDM CLI
+
+@AGENTS.md

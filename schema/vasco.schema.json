@@ -1,0 +1,2305 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Array": {
+            "items": {
+                "$ref": "#/definitions/IdmVectorGraphicsCommand"
+            },
+            "type": "array"
+        },
+        "IdmAlignment": {
+            "additionalProperties": false,
+            "properties": {
+                "scale": {
+                    "default": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "scale_type": {
+                    "default": "fit",
+                    "enum": [
+                        "custom",
+                        "fill",
+                        "fit"
+                    ],
+                    "type": "string"
+                },
+                "x": {
+                    "default": 0.5,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "y": {
+                    "default": 0.5,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "IdmAnimatedPropertyType": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/IdmVector2"
+                },
+                {
+                    "$ref": "#/definitions/IdmVector3"
+                },
+                {
+                    "$ref": "#/definitions/IdmVector4"
+                },
+                {
+                    "$ref": "#/definitions/IdmMatrix4"
+                },
+                {
+                    "$ref": "#/definitions/IdmColor4"
+                },
+                {
+                    "$ref": "#/definitions/IdmShape"
+                },
+                {
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean"
+                    ]
+                }
+            ]
+        },
+        "IdmAudioLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "asset_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "duration_referrer": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "placeholder": {
+                    "default": true,
+                    "type": "boolean"
+                },
+                "sidechain_compression": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "audio",
+                    "type": "string"
+                },
+                "volume": {
+                    "default": 0,
+                    "description": "In db.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "asset_id",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmBinaryAsset": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/IdmBinaryAssetType"
+                },
+                "uri": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "uri"
+            ],
+            "type": "object"
+        },
+        "IdmBinaryAssetType": {
+            "enum": [
+                "audio",
+                "font",
+                "image",
+                "video"
+            ],
+            "type": "string"
+        },
+        "IdmCameraLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "zoom": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "field_of_view": {
+                    "default": 90,
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "motion_blur": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "camera",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmColor3": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+        },
+        "IdmColor4": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+        },
+        "IdmComposition": {
+            "additionalProperties": false,
+            "properties": {
+                "fps": {
+                    "default": 25,
+                    "maximum": 120,
+                    "minimum": 1,
+                    "type": "number"
+                },
+                "height": {
+                    "default": 720,
+                    "maximum": 1920,
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "layers": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/IdmTextLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/IdmSolidLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/IdmMediaLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/IdmAudioLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/IdmCameraLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/IdmCompositionLayer"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "shutter_angle": {
+                    "default": 0.5,
+                    "description": "The composition shutter angle in frames.",
+                    "maximum": 2,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "shutter_phase": {
+                    "default": -0.25,
+                    "description": "The composition shutter phase in frames.",
+                    "maximum": 1,
+                    "minimum": -1,
+                    "type": "number"
+                },
+                "transition": {
+                    "$ref": "#/definitions/IdmTransition"
+                },
+                "width": {
+                    "default": 1280,
+                    "maximum": 1920,
+                    "minimum": 1,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "height",
+                "layers",
+                "num_of_frames",
+                "width"
+            ],
+            "type": "object"
+        },
+        "IdmCompositionLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "alignment": {
+                    "$ref": "#/definitions/IdmAlignment"
+                },
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "anchor_point": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "visible": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "blend_mode": {
+                    "default": "normal",
+                    "enum": [
+                        "add",
+                        "color",
+                        "colorburn",
+                        "colordodge",
+                        "darken",
+                        "difference",
+                        "divide",
+                        "exclusion",
+                        "hardlight",
+                        "hardmix",
+                        "hue",
+                        "lighten",
+                        "linearburn",
+                        "lineardodge",
+                        "linearlight",
+                        "luminosity",
+                        "multiply",
+                        "none",
+                        "normal",
+                        "overlay",
+                        "pinlight",
+                        "saturation",
+                        "screen",
+                        "softlight",
+                        "subtract",
+                        "vividlight"
+                    ],
+                    "type": "string"
+                },
+                "bounds": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "height": {
+                            "type": "number"
+                        },
+                        "width": {
+                            "type": "number"
+                        },
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "height",
+                        "width",
+                        "x",
+                        "y"
+                    ],
+                    "type": "object"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "comp_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "effect_ids": {
+                    "items": {
+                        "minimum": 0,
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "is_3d": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "mask_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "motion_blur": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "offset_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "placeholder": {
+                    "default": true,
+                    "type": "boolean"
+                },
+                "track_matte": {
+                    "default": "none",
+                    "enum": [
+                        "alpha",
+                        "alpha_inverted",
+                        "luma",
+                        "luma_inverted",
+                        "none"
+                    ],
+                    "type": "string"
+                },
+                "track_matte_source_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "composition",
+                    "type": "string"
+                },
+                "visible": {
+                    "default": true,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "bounds",
+                "comp_id",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmCornerPin": {
+            "additionalProperties": false,
+            "properties": {
+                "lower_left": {
+                    "$ref": "#/definitions/IdmVector2"
+                },
+                "lower_right": {
+                    "$ref": "#/definitions/IdmVector2"
+                },
+                "upper_left": {
+                    "$ref": "#/definitions/IdmVector2"
+                },
+                "upper_right": {
+                    "$ref": "#/definitions/IdmVector2"
+                }
+            },
+            "required": [
+                "lower_left",
+                "lower_right",
+                "upper_left",
+                "upper_right"
+            ],
+            "type": "object"
+        },
+        "IdmCornerPinEffect": {
+            "additionalProperties": false,
+            "properties": {
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "crop_to_pins": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "from_pins.lower_left": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "from_pins.lower_right": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "from_pins.upper_left": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "from_pins.upper_right": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "overlay_mode": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "to_pins.lower_left": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "to_pins.lower_right": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "to_pins.upper_left": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "to_pins.upper_right": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "crop_to_pins": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "from_pins": {
+                    "$ref": "#/definitions/IdmCornerPin"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "overlay_mode": {
+                    "default": "'both'",
+                    "enum": [
+                        "both",
+                        "from",
+                        "to"
+                    ],
+                    "type": "string"
+                },
+                "to_pins": {
+                    "$ref": "#/definitions/IdmCornerPin"
+                }
+            },
+            "required": [
+                "crop_to_pins",
+                "from_pins",
+                "name",
+                "to_pins"
+            ],
+            "type": "object"
+        },
+        "IdmFrameAnimation<IdmAnimatedPropertyType>": {
+            "additionalProperties": false,
+            "properties": {
+                "frames": {
+                    "items": {
+                        "$ref": "#/definitions/IdmAnimatedPropertyType"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "frames"
+            ],
+            "type": "object"
+        },
+        "IdmGaussianBlurEffect": {
+            "additionalProperties": false,
+            "properties": {
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "blurriness": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "dimensions": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "repeat_edge_pixels": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "blurriness": {
+                    "default": 5,
+                    "maximum": 256,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "dimensions": {
+                    "default": "both",
+                    "enum": [
+                        "both",
+                        "horizontal",
+                        "vertical"
+                    ],
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "repeat_edge_pixels": {
+                    "default": false,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "blurriness",
+                "dimensions",
+                "name",
+                "repeat_edge_pixels"
+            ],
+            "type": "object"
+        },
+        "IdmLayerStylesEffect": {
+            "additionalProperties": false,
+            "properties": {
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "blending_options.blue": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "blending_options.green": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "blending_options.opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "blending_options.red": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.angle": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.distance": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.enabled": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.knock": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.size": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "drop_shadow.spread": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.enabled": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.range": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.size": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "outer_glow.spread": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "overlay.blend_mode": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "overlay.color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "overlay.enabled": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "overlay.opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "stroke.color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "stroke.enabled": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "stroke.opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "stroke.position": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "stroke.size": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "blending_options": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "blue": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "green": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "opacity": {
+                            "default": 1,
+                            "type": "number"
+                        },
+                        "red": {
+                            "default": true,
+                            "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                },
+                "drop_shadow": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "angle": {
+                            "default": 120,
+                            "type": "number"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/IdmColor4",
+                            "default": [
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "distance": {
+                            "default": 40,
+                            "type": "number"
+                        },
+                        "enabled": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "knock": {
+                            "default": false,
+                            "type": "boolean"
+                        },
+                        "opacity": {
+                            "default": 0.75,
+                            "type": "number"
+                        },
+                        "size": {
+                            "default": 5,
+                            "type": "number"
+                        },
+                        "spread": {
+                            "default": 0,
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "outer_glow": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "color": {
+                            "$ref": "#/definitions/IdmColor4",
+                            "default": [
+                                1,
+                                1,
+                                0.75
+                            ]
+                        },
+                        "enabled": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "opacity": {
+                            "default": 0.75,
+                            "type": "number"
+                        },
+                        "range": {
+                            "default": 0.5,
+                            "type": "number"
+                        },
+                        "size": {
+                            "default": 5,
+                            "type": "number"
+                        },
+                        "spread": {
+                            "default": 0,
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "overlay": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "blend_mode": {
+                            "default": "normal",
+                            "enum": [
+                                "color",
+                                "colorburn",
+                                "colordodge",
+                                "darken",
+                                "difference",
+                                "divide",
+                                "exclusion",
+                                "hardlight",
+                                "hardmix",
+                                "hue",
+                                "lighten",
+                                "linearburn",
+                                "lineardodge",
+                                "linearlight",
+                                "luminosity",
+                                "multiply",
+                                "normal",
+                                "overlay",
+                                "pinlight",
+                                "saturation",
+                                "screen",
+                                "softlight",
+                                "subtract",
+                                "vividlight"
+                            ],
+                            "type": "string"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/IdmColor4",
+                            "default": [
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "enabled": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "opacity": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "stroke": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "color": {
+                            "$ref": "#/definitions/IdmColor4",
+                            "default": [
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "enabled": {
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "opacity": {
+                            "default": 1,
+                            "type": "number"
+                        },
+                        "position": {
+                            "default": "outside",
+                            "enum": [
+                                "center",
+                                "inside",
+                                "outside"
+                            ],
+                            "type": "string"
+                        },
+                        "size": {
+                            "default": 5,
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "color",
+                        "opacity",
+                        "position",
+                        "size"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "type": "object"
+        },
+        "IdmMask": {
+            "additionalProperties": false,
+            "properties": {
+                "shapes": {
+                    "items": {
+                        "$ref": "#/definitions/IdmMaskShape"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "shapes"
+            ],
+            "type": "object"
+        },
+        "IdmMaskShape": {
+            "additionalProperties": false,
+            "properties": {
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "blend_mode": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "expansion": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "feather": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "inverted": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "shape": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "blend_mode": {
+                    "default": "add",
+                    "enum": [
+                        "add",
+                        "darken",
+                        "difference",
+                        "intersect",
+                        "lighten",
+                        "none",
+                        "subtract"
+                    ],
+                    "type": "string"
+                },
+                "expansion": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "feather": {
+                    "$ref": "#/definitions/IdmVector2",
+                    "default": [
+                        0,
+                        0
+                    ]
+                },
+                "inverted": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "shape": {
+                    "$ref": "#/definitions/IdmShape"
+                }
+            },
+            "required": [
+                "shape"
+            ],
+            "type": "object"
+        },
+        "IdmMatrix4": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 16,
+            "minItems": 16,
+            "type": "array"
+        },
+        "IdmMediaLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "alignment": {
+                    "$ref": "#/definitions/IdmAlignment"
+                },
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "anchor_point": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "visible": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "asset_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "blend_mode": {
+                    "default": "normal",
+                    "enum": [
+                        "add",
+                        "color",
+                        "colorburn",
+                        "colordodge",
+                        "darken",
+                        "difference",
+                        "divide",
+                        "exclusion",
+                        "hardlight",
+                        "hardmix",
+                        "hue",
+                        "lighten",
+                        "linearburn",
+                        "lineardodge",
+                        "linearlight",
+                        "luminosity",
+                        "multiply",
+                        "none",
+                        "normal",
+                        "overlay",
+                        "pinlight",
+                        "saturation",
+                        "screen",
+                        "softlight",
+                        "subtract",
+                        "vividlight"
+                    ],
+                    "type": "string"
+                },
+                "bounds": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "height": {
+                            "type": "number"
+                        },
+                        "width": {
+                            "type": "number"
+                        },
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "height",
+                        "width",
+                        "x",
+                        "y"
+                    ],
+                    "type": "object"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "effect_ids": {
+                    "items": {
+                        "minimum": 0,
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "is_3d": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "mask_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "motion_blur": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "offset_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "placeholder": {
+                    "default": true,
+                    "type": "boolean"
+                },
+                "track_matte": {
+                    "default": "none",
+                    "enum": [
+                        "alpha",
+                        "alpha_inverted",
+                        "luma",
+                        "luma_inverted",
+                        "none"
+                    ],
+                    "type": "string"
+                },
+                "track_matte_source_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "media",
+                    "type": "string"
+                },
+                "visible": {
+                    "default": true,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "asset_id",
+                "bounds",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmShape": {
+            "$ref": "#/definitions/Array"
+        },
+        "IdmSolidLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "alignment": {
+                    "$ref": "#/definitions/IdmAlignment"
+                },
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "anchor_point": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "visible": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "blend_mode": {
+                    "default": "normal",
+                    "enum": [
+                        "add",
+                        "color",
+                        "colorburn",
+                        "colordodge",
+                        "darken",
+                        "difference",
+                        "divide",
+                        "exclusion",
+                        "hardlight",
+                        "hardmix",
+                        "hue",
+                        "lighten",
+                        "linearburn",
+                        "lineardodge",
+                        "linearlight",
+                        "luminosity",
+                        "multiply",
+                        "none",
+                        "normal",
+                        "overlay",
+                        "pinlight",
+                        "saturation",
+                        "screen",
+                        "softlight",
+                        "subtract",
+                        "vividlight"
+                    ],
+                    "type": "string"
+                },
+                "bounds": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "height": {
+                            "type": "number"
+                        },
+                        "width": {
+                            "type": "number"
+                        },
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "height",
+                        "width",
+                        "x",
+                        "y"
+                    ],
+                    "type": "object"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "effect_ids": {
+                    "items": {
+                        "minimum": 0,
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "is_3d": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "mask_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "motion_blur": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "offset_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "placeholder": {
+                    "default": true,
+                    "type": "boolean"
+                },
+                "track_matte": {
+                    "default": "none",
+                    "enum": [
+                        "alpha",
+                        "alpha_inverted",
+                        "luma",
+                        "luma_inverted",
+                        "none"
+                    ],
+                    "type": "string"
+                },
+                "track_matte_source_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "solid",
+                    "type": "string"
+                },
+                "visible": {
+                    "default": true,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "bounds",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmTextAnimator": {
+            "additionalProperties": false,
+            "properties": {
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "anchor_point": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "character_offset": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "character_range": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "character_value": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "line_spacing": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "position": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "ranges": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "rotation": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "scale": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "skew": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "skew_axis": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "tracking": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "tracking_type": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "character_offset": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "character_range": {
+                    "default": "case_and_digits",
+                    "enum": [
+                        "case_and_digits",
+                        "full_unicode"
+                    ],
+                    "type": "string"
+                },
+                "character_value": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor4",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "line_spacing": {
+                    "$ref": "#/definitions/IdmVector2",
+                    "default": [
+                        0,
+                        0
+                    ]
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "position": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "ranges": {
+                    "items": {
+                        "$ref": "#/definitions/IdmTextAnimatorRange"
+                    },
+                    "type": "array"
+                },
+                "rotation": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "scale": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "skew": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "skew_axis": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "tracking": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "tracking_type": {
+                    "default": "before_and_after",
+                    "enum": [
+                        "after",
+                        "before",
+                        "before_and_after"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "IdmTextAnimatorRange": {
+            "additionalProperties": false,
+            "properties": {
+                "amount": {
+                    "default": 1,
+                    "type": "number"
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "amount": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "based_on": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "ease_high": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "ease_low": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "end": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "mode": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "offset": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "randomize_order": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "randomize_seed": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "shape": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "smoothness": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "start": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "based_on": {
+                    "default": "characters",
+                    "enum": [
+                        "characters",
+                        "characters_excluding_spaces",
+                        "lines",
+                        "words"
+                    ],
+                    "type": "string"
+                },
+                "ease_high": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "ease_low": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "end": {
+                    "default": 1,
+                    "type": "number"
+                },
+                "mode": {
+                    "default": "add",
+                    "enum": [
+                        "add",
+                        "difference",
+                        "intersect",
+                        "max",
+                        "min",
+                        "subtract"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "randomize_order": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "randomize_seed": {
+                    "default": 0,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "shape": {
+                    "default": "square",
+                    "enum": [
+                        "ramp_down",
+                        "ramp_up",
+                        "round",
+                        "smooth",
+                        "square",
+                        "triangle"
+                    ],
+                    "type": "string"
+                },
+                "smoothness": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "start": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "units": {
+                    "default": "percentage",
+                    "enum": [
+                        "index",
+                        "percentage"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "IdmTextLayer": {
+            "additionalProperties": false,
+            "properties": {
+                "alignment": {
+                    "additionalProperties": false,
+                    "description": "The alignment of the text with respect to the bounding box.",
+                    "properties": {
+                        "horizontal": {
+                            "default": "left",
+                            "enum": [
+                                "center",
+                                "left",
+                                "right"
+                            ],
+                            "type": "string"
+                        },
+                        "vertical": {
+                            "default": "top",
+                            "enum": [
+                                "baseline",
+                                "bottom",
+                                "middle",
+                                "top"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "horizontal",
+                        "vertical"
+                    ],
+                    "type": "object"
+                },
+                "anchor_point": {
+                    "$ref": "#/definitions/IdmVector3",
+                    "default": [
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                "animations": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "anchor_point": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "color": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "opacity": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "transform": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "visible": {
+                            "$ref": "#/definitions/id"
+                        }
+                    },
+                    "type": "object"
+                },
+                "animators": {
+                    "items": {
+                        "$ref": "#/definitions/IdmTextAnimator"
+                    },
+                    "type": "array"
+                },
+                "baseline": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "blend_mode": {
+                    "default": "normal",
+                    "enum": [
+                        "add",
+                        "color",
+                        "colorburn",
+                        "colordodge",
+                        "darken",
+                        "difference",
+                        "divide",
+                        "exclusion",
+                        "hardlight",
+                        "hardmix",
+                        "hue",
+                        "lighten",
+                        "linearburn",
+                        "lineardodge",
+                        "linearlight",
+                        "luminosity",
+                        "multiply",
+                        "none",
+                        "normal",
+                        "overlay",
+                        "pinlight",
+                        "saturation",
+                        "screen",
+                        "softlight",
+                        "subtract",
+                        "vividlight"
+                    ],
+                    "type": "string"
+                },
+                "bounds": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "height": {
+                            "type": "number"
+                        },
+                        "width": {
+                            "type": "number"
+                        },
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "height",
+                        "width",
+                        "x",
+                        "y"
+                    ],
+                    "type": "object"
+                },
+                "breakline": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "effect_ids": {
+                    "items": {
+                        "minimum": 0,
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "ellipsis": {
+                    "default": "…",
+                    "type": "string"
+                },
+                "first_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "font_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "font_size": {
+                    "default": 48,
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                "is_3d": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "leading": {
+                    "default": 1.2,
+                    "type": "number"
+                },
+                "mask_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "min_font_size": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "motion_blur": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "num_of_frames": {
+                    "default": 100,
+                    "type": "integer"
+                },
+                "offset_frame": {
+                    "default": 0,
+                    "type": "integer"
+                },
+                "opacity": {
+                    "default": 1,
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "placeholder": {
+                    "default": true,
+                    "type": "boolean"
+                },
+                "rtl": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "shrink": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "styles": {
+                    "items": {
+                        "$ref": "#/definitions/IdmTextStyle"
+                    },
+                    "type": "array"
+                },
+                "text": {
+                    "default": "",
+                    "type": "string"
+                },
+                "track_matte": {
+                    "default": "none",
+                    "enum": [
+                        "alpha",
+                        "alpha_inverted",
+                        "luma",
+                        "luma_inverted",
+                        "none"
+                    ],
+                    "type": "string"
+                },
+                "track_matte_source_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "tracking": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "transform": {
+                    "$ref": "#/definitions/IdmMatrix4",
+                    "default": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                },
+                "type": {
+                    "const": "text",
+                    "type": "string"
+                },
+                "visible": {
+                    "default": true,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "bounds",
+                "font_id",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IdmTextStyle": {
+            "additionalProperties": false,
+            "properties": {
+                "bold": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "color": {
+                    "$ref": "#/definitions/IdmColor3",
+                    "default": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "font_id": {
+                    "$ref": "#/definitions/id"
+                },
+                "font_size": {
+                    "default": 48,
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                "highlight": {
+                    "$ref": "#/definitions/IdmVector4",
+                    "default": false
+                },
+                "italic": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "leading": {
+                    "default": 1.2,
+                    "type": "number"
+                },
+                "length": {
+                    "exclusiveMinimum": 0,
+                    "type": "integer"
+                },
+                "shift": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "start": {
+                    "default": 0,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "strikethrough": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "tracking": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "underline": {
+                    "default": false,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "font_id"
+            ],
+            "type": "object"
+        },
+        "IdmTransition": {
+            "additionalProperties": false,
+            "properties": {
+                "end": {
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "start": {
+                    "minimum": 0,
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "IdmVector2": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+        },
+        "IdmVector3": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+        },
+        "IdmVector4": {
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+        },
+        "IdmVectorGraphicsCommand": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "cubic_to",
+                        "line_to",
+                        "move_to",
+                        "quadratic_to"
+                    ],
+                    "type": "string"
+                },
+                "values": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "type",
+                "values"
+            ],
+            "type": "object"
+        },
+        "id": {
+            "minimum": 0,
+            "type": "integer"
+        }
+    },
+    "properties": {
+        "animations": {
+            "items": {
+                "$ref": "#/definitions/IdmFrameAnimation<IdmAnimatedPropertyType>"
+            },
+            "type": "array"
+        },
+        "assets": {
+            "items": {
+                "$ref": "#/definitions/IdmBinaryAsset"
+            },
+            "type": "array"
+        },
+        "compositions": {
+            "items": {
+                "$ref": "#/definitions/IdmComposition"
+            },
+            "type": "array"
+        },
+        "effects": {
+            "items": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/IdmGaussianBlurEffect"
+                    },
+                    {
+                        "$ref": "#/definitions/IdmCornerPinEffect"
+                    },
+                    {
+                        "$ref": "#/definitions/IdmLayerStylesEffect"
+                    }
+                ]
+            },
+            "type": "array"
+        },
+        "entry_point": {
+            "$ref": "#/definitions/id"
+        },
+        "masks": {
+            "items": {
+                "$ref": "#/definitions/IdmMask"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "animations",
+        "assets",
+        "compositions",
+        "effects",
+        "entry_point",
+        "masks"
+    ],
+    "type": "object"
+}
+

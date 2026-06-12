@@ -1,0 +1,64 @@
+---
+name: idm-maker
+description: Author Idomoo IDM video files locally from a compact scene JSON, compiled with the `idm` CLI, optionally rendered to MP4 via the Idomoo API. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+---
+
+# IDM Maker — compact scenes compiled to .idm locally
+
+Turn a short "scene" JSON into a full VASCO project, compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
+
+**CLI:** `idm` (install: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash`, or `npm install -g git+https://github.com/Idomoo-RnD/vasco.git`). Verify with `idm version`.
+
+## Workflow
+
+1. **Ask the user about assets first**: do they have images, video clips, audio/music, fonts, or brand colors to use? Get file paths for anything they have. Text layers REQUIRE a `.ttf`/`.otf` font file. If they have no assets (or for missing pieces), generate placeholders (flat/gradient PNGs via a small Node script) and say so in the result. Skip the question only when the user already specified assets or explicitly asked for placeholders.
+2. Understand what video the user wants (size, duration, layers, motion).
+3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
+4. Compile: `idm compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
+5. To render an MP4: `idm render scene.json --library "<name>" -o out.mp4`.
+   - **Credentials**: ask the user for their **account ID** and **secret key** if `idm auth status` fails. Set them via `idm auth login --account <id> --token <secret>`, or env `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`.
+   - **Library**: the upload destination is the user's choice — never pick one for them. Run `idm library list --json`, show the user the existing libraries, and ask which to upload to (or a name for a new one — passing a new name creates it). Then pass it as `--library "<name-or-id>"`. Without the flag, a non-interactive render fails with the library list in the error.
+   - A render takes minutes (upload → export → render, polled); run it in the background and report the printed video/poster URLs.
+6. To debug, use `--vasco` (dumps compiled VASCO JSON) or `idm inspect out.idm` (decode a binary back).
+
+Commands (a bare `.json` arg implies `compile`, a bare `.idm` implies `inspect`):
+`compile <scene.json> [-o out.idm] [--vasco]` · `validate <scene.json> [--print]` · `inspect <file.idm> [--assets <dir>]` · `render <scene.json|.idm> [-o out.mp4] [--height] [--quality]` · `init [scene.json]` · `auth login|status` · `schema` · `update`. Add `--json` for machine-readable output. Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
+
+## Scene format essentials
+
+Times are **seconds** (use `f` instead of `t` in keyframes for exact frames). Colors are hex strings. Coordinates are pixels, origin top-left. Layers render **bottom-first** (first layer = background). Asset paths resolve relative to the scene file.
+
+```json
+{
+  "width": 1280, "height": 720, "fps": 25, "duration": 4,
+  "layers": [
+    { "type": "image", "name": "bg", "src": "./bg.jpg",
+      "anchor": [640, 360],
+      "animate": { "scale": [ {"t": 0, "v": 1}, {"t": 4, "v": 1.15, "ease": "inOutSine"} ] } },
+    { "type": "text", "name": "title", "text": "Hello!",
+      "font": "./font.ttf", "size": 110, "color": "#ffe14d",
+      "box": [100, 120, 1080, 220], "align": "center middle",
+      "effects": [ { "type": "shadow", "color": "#000000cc", "distance": 12 } ],
+      "animate": {
+        "opacity":  [ {"t": 0, "v": 0}, {"t": 0.8, "v": 1, "ease": "outCubic"} ],
+        "position": [ {"t": 0, "v": [0, 80], "ease": "outBack"}, {"t": 1, "v": [0, 0]} ]
+      } }
+  ]
+}
+```
+
+Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition), `camera`.
+
+**Tween engine:** any `animate` channel is a keyframe list `{"t": sec, "v": value, "ease": name}`; the CLI bakes them to per-frame VASCO arrays. `position`/`scale`/`rotation` (degrees)/`anchor` compose into the transform matrix; `opacity`, `color`, `visible`, and any raw VASCO channel bake directly. Easings: `linear`, `hold`, `in/out/inOut` × `Quad Cubic Quart Quint Sine Expo Circ Back Elastic Bounce`, or cubic-bezier `[x1,y1,x2,y2]`.
+
+**Full reference** — read [references/format.md](references/format.md) before writing any non-trivial scene. It covers every layer type's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + shape morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough escape hatch.
+
+## Rules of thumb
+
+- Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Asset files must exist at compile time. A bundled free font ships with the repo at `examples/assets/DejaVuSans.ttf` (`idm schema` prints the full VASCO schema if you need an exotic property).
+- `anchor` is the pivot for scale/rotation, in comp coordinates; `position` is where that pivot lands and **defaults to the anchor** — so to scale/rotate a layer in place around its center, set only `anchor` to the layer's center point. Without an anchor, `position` is a plain offset from the layer's natural spot. (The anchor is baked into the transform matrix — the engine does not apply `anchor_point` itself.)
+- The `ease` on a keyframe shapes the segment leaving it; if absent, the next keyframe's ease is used (so either CSS-style or AE-style placement works).
+- Keyframe times are relative to the layer's `start`, not the comp.
+- Sub-comps that reference other sub-comps must be declared after the comps they reference inside `comps` (the main scene may reference any of them).
+- Anything not listed in the reference passes through verbatim as raw VASCO, so every engine capability is reachable.
+- Comp max dimension is 1920 on each axis.

@@ -1,0 +1,101 @@
+{
+  "width": 1280,
+  "height": 720,
+  "fps": 25,
+  "duration": 3,
+  "layers": [
+    { "type": "solid", "name": "bg", "color": "#222831" },
+    {
+      "type": "comp",
+      "name": "card-instance",
+      "comp": "card",
+      "box": [340, 160, 600, 400],
+      "animate": {
+        "rotation": [ { "t": 0, "v": -8, "ease": "inOutSine" }, { "t": 3, "v": 8 } ]
+      }
+    },
+    {
+      "type": "text",
+      "name": "matte-text",
+      "text": "MATTE",
+      "font": "./assets/DejaVuSans.ttf",
+      "size": 160,
+      "box": [0, 480, 1280, 200],
+      "align": "center middle",
+      "visible": false
+    },
+    {
+      "type": "image",
+      "name": "matted-img",
+      "src": "./assets/placeholder.png",
+      "box": [0, 480, 1280, 200],
+      "fit": "fill",
+      "matte": { "type": "alpha", "source": "matte-text" }
+    },
+    {
+      "type": "text",
+      "name": "animated-words",
+      "text": "one two three four",
+      "font": "./assets/DejaVuSans.ttf",
+      "size": 60,
+      "color": "#ffffff",
+      "box": [0, 40, 1280, 100],
+      "align": "center",
+      "animators": [
+        {
+          "opacity": 0,
+          "position": [0, 40, 0],
+          "ranges": [
+            {
+              "based_on": "words",
+              "shape": "ramp_up",
+              "animate": {
+                "start": [ { "t": 0, "v": 0 }, { "t": 2, "v": 1, "ease": "outQuad" } ],
+                "end": [ { "t": 0, "v": 0.25 }, { "t": 2, "v": 1.25 } ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "solid",
+      "name": "morphmask",
+      "color": "#e84545",
+      "box": [900, 60, 300, 300],
+      "mask": {
+        "shapes": [
+          {
+            "ellipse": [1050, 210, 60, 60],
+            "feather": 4,
+            "animate": {
+              "shape": [
+                { "t": 0, "v": { "ellipse": [1050, 210, 60, 60] }, "ease": "inOutCubic" },
+                { "t": 2.5, "v": { "ellipse": [1050, 210, 140, 90] } }
+              ],
+              "opacity": [ { "t": 0, "v": 0.4 }, { "t": 1, "v": 1 } ]
+            }
+          }
+        ]
+      }
+    },
+    { "type": "audio", "name": "bgm", "src": "./assets/silence.wav", "volume": -6, "ducking": true },
+    { "type": "camera", "name": "cam", "fov": 70, "position": [640, 360, -800],
+      "animate": { "position": [ { "t": 0, "v": [640, 360, -800] }, { "t": 3, "v": [640, 360, -700], "ease": "inOutQuad" } ] } }
+  ],
+  "comps": {
+    "card": {
+      "width": 600,
+      "height": 400,
+      "duration": 3,
+      "layers": [
+        { "type": "solid", "name": "card-bg", "color": "#00adb5",
+          "mask": { "rect": [20, 20, 560, 360], "feather": 2 } },
+        { "type": "text", "name": "card-label", "text": "SUB-COMP",
+          "font": "./assets/DejaVuSans.ttf", "size": 56, "color": "#0a0a0a",
+          "box": [0, 150, 600, 100], "align": "center middle",
+          "animate": { "opacity": [ { "t": 0.3, "v": 0 }, { "t": 1, "v": 1, "ease": "outCubic" } ] } }
+      ]
+    }
+  }
+}

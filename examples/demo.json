@@ -1,0 +1,70 @@
+{
+  "width": 1280,
+  "height": 720,
+  "fps": 25,
+  "duration": 4,
+  "layers": [
+    {
+      "type": "image",
+      "name": "bg",
+      "src": "./assets/placeholder.png",
+      "fit": "fill",
+      "anchor": [640, 360],
+      "animate": {
+        "scale": [
+          { "t": 0, "v": 1, "ease": "inOutSine" },
+          { "t": 4, "v": 1.15 }
+        ]
+      }
+    },
+    {
+      "type": "solid",
+      "name": "bar",
+      "color": "#000000",
+      "opacity": 0.6,
+      "box": [0, 500, 1280, 140],
+      "mask": { "rect": [0, 500, 1280, 140], "feather": 12 },
+      "effects": [
+        { "type": "blur", "amount": 4, "animate": { "amount": [ { "t": 0, "v": 0 }, { "t": 1, "v": 8, "ease": "outQuad" } ] } }
+      ],
+      "animate": {
+        "opacity": [ { "t": 0.5, "v": 0 }, { "t": 1.2, "v": 0.6, "ease": "outCubic" } ]
+      }
+    },
+    {
+      "type": "text",
+      "name": "title",
+      "text": "Hello, IDM!",
+      "font": "./assets/DejaVuSans.ttf",
+      "size": 110,
+      "color": "#ffe14d",
+      "box": [100, 120, 1080, 220],
+      "align": "center middle",
+      "effects": [
+        { "type": "shadow", "color": "#000000cc", "distance": 12, "size": 8 },
+        { "type": "stroke", "color": "#331a00", "size": 3 }
+      ],
+      "animate": {
+        "opacity": [ { "t": 0, "v": 0 }, { "t": 0.8, "v": 1, "ease": "outCubic" } ],
+        "position": [
+          { "t": 0, "v": [0, 80], "ease": "outBack" },
+          { "t": 1, "v": [0, 0] }
+        ]
+      }
+    },
+    {
+      "type": "text",
+      "name": "subtitle",
+      "text": "compact json, tweened, compiled locally",
+      "font": "./assets/DejaVuSans.ttf",
+      "size": 44,
+      "color": "#ffffff",
+      "box": [0, 520, 1280, 100],
+      "align": "center middle",
+      "start": 1,
+      "animate": {
+        "opacity": [ { "t": 0, "v": 0 }, { "t": 0.6, "v": 1, "ease": "outQuad" } ]
+      }
+    }
+  ]
+}
