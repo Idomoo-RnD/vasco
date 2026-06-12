@@ -1,3 +1,9 @@
+```text
+▄▄ ▄▄▄▄   ▄▄▄  ▄▄   ▄▄  ▄▄▄   ▄▄▄    ▄▄ ▄▄  ▄▄▄   ▄▄▄▄  ▄▄▄▄  ▄▄▄
+██ ██▀██ ██▀██ ██▀▄▀██ ██▀██ ██▀██   ██▄██ ██▀██ ███▄▄ ██▀▀▀ ██▀██
+██ ████▀ ▀███▀ ██   ██ ▀███▀ ▀███▀    ▀█▀  ██▀██ ▄▄██▀ ▀████ ▀███▀
+```
+
 # IDM CLI
 
 **Author Idomoo IDM videos from the command line.** A compact scene JSON — keyframe tweens, effects, masks, hex colors — compiles locally into a binary `.idm`, then renders to MP4 through the Idomoo API.
