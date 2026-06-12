@@ -8,6 +8,70 @@
 
 **Author Idomoo IDM videos from the command line.** A compact scene JSON — keyframe tweens, effects, masks, hex colors — compiles locally into a binary `.idm`, then renders to MP4 through the Idomoo API.
 
+## 1. Install the CLI
+
+**Single standalone binary — no runtime required** (never install Node.js for it). macOS and Linux (amd64 + arm64):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
+```
+
+The installer downloads the platform binary from [releases](https://github.com/Idomoo-RnD/vasco/releases), verifies its checksum, installs it (`~/.local/bin/idm` on Unix, `%LOCALAPPDATA%\Programs\idm\idm.exe` on Windows), and asks which agent skills to install (next section). Verify with:
+
+```bash
+idm version
+```
+
+Update anytime with `idm update` (self-replaces from the latest release). Prefer manual? Download a binary straight from the [releases page](https://github.com/Idomoo-RnD/vasco/releases/latest) and run it by path. Building from source needs Node ≥ 18: clone, `npm install`, `node bin/idm.mjs` (or `node scripts/build-sea.mjs` for your own binary).
+
+## 2. Install the agent skills
+
+The installer already offers this menu (Claude Code / Codex / Cursor / Cowork / All / Skip — non-interactive runs use `IDM_SKILL=...`). To (re)install later:
+
+| agent | command | lands in |
+|---|---|---|
+| **Claude Code** | `idm skill install` | `~/.claude/skills/idm-maker` |
+| **OpenAI Codex** | `idm skill install --codex` | `~/.codex/skills/idm-maker` |
+| **Cursor** | `idm skill install --cursor` | `~/.cursor/skills/idm-maker` + project `.cursor/skills` |
+| **Claude Cowork / claude.ai** | `idm skill install --cowork` | writes `idm-maker-skill.zip` — upload it in the app: **Customize → + → Skills** |
+
+Flags combine (`--claude --cursor --cowork`). For Cursor team projects, commit `.cursor/skills/idm-maker/` to the repo. Other agents: point them at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — plain markdown, no tooling assumptions.
+
+Once installed, just ask your agent to *"make an idm of …"* — the skill triggers, writes the scene JSON, and drives `idm`.
+
+## 3. Authenticate (only needed for rendering)
+
+Compiling is fully local and needs no account. Rendering MP4s needs your Idomoo **account id** and **secret key**:
+
+```bash
+idm auth login --account 1234 --token your-secret    # persists to ~/.idm/credentials
+idm auth status                                       # verify
+```
+
+Or keep it ephemeral for agents/CI:
+
+```bash
+export IDOMOO_ACCOUNT_ID=1234
+export IDOMOO_SECRET_KEY=your-secret
+```
+
+## 4. Quick start
+
+```bash
+idm init scene.json            # starter scene (point "font" at a real .ttf)
+idm compile scene.json         # -> scene.idm, schema-validated, prints a summary
+idm library list               # pick (or invent) a library to upload into
+idm render scene.json --library "Demos" -o scene.mp4
+```
+
+A taste of the scene format:
+
 ```json
 {
   "width": 1280, "height": 720, "fps": 25, "duration": 4,
@@ -22,77 +86,6 @@
       } }
   ]
 }
-```
-
-```bash
-idm compile scene.json -o out.idm     # local, instant, schema-validated
-idm render scene.json --library "My Library" -o out.mp4
-```
-
-## Built for
-
-- **Coding agents** — Claude Code, Codex, and others (see [Agent skills](#agent-skills))
-- **CI/CD pipelines** — templated video generation from data
-- **Anyone authoring IDM** without After Effects
-
-## Agent-first by design
-
-- `--json` gives machine-readable results on stdout; errors are structured on stderr.
-- Stable exit codes: `0` ok · `1` compile/schema · `2` missing file · `3` auth · `4` render timeout.
-- Non-interactive by default: with env credentials and `--library` set, nothing reads a TTY.
-- Self-describing: `idm schema` prints the full VASCO JSON Schema without auth or network.
-
-## Install
-
-**Single standalone binary — no runtime required.** macOS and Linux (amd64 + arm64):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash
-```
-
-Windows (PowerShell):
-
-```powershell
-irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
-```
-
-Both download the platform binary from [releases](https://github.com/Idomoo-RnD/vasco/releases), verify its checksum, install it (`~/.local/bin/idm` on Unix, `%LOCALAPPDATA%\Programs\idm\idm.exe` on Windows), then **ask where to install the agent skill** — Claude Code, OpenAI Codex, both, or skip. Non-interactive runs (CI) default to Claude Code (+ Codex when `~/.codex` exists); override with `IDM_SKILL=claude|codex|both|skip`.
-
-From source instead (Node ≥ 18): `git clone` this repo, `npm install`, then `node bin/idm.mjs` — or `node scripts/build-sea.mjs` to produce your own binary.
-
-## Updates
-
-```bash
-idm update               # self-update to the latest release
-```
-
-## Authenticate
-
-Rendering needs an Idomoo **account id** and **secret key** (compiling is local and needs nothing).
-
-**1. Environment variables** — agents, CI; ephemeral:
-
-```bash
-export IDOMOO_ACCOUNT_ID=1234
-export IDOMOO_SECRET_KEY=your-secret
-```
-
-**2. `auth login`** — persists to `~/.idm/credentials`:
-
-```bash
-idm auth login --account 1234 --token your-secret    # non-interactive
-idm auth login                                        # interactive prompts
-```
-
-Verify with `idm auth status`.
-
-## Quick start
-
-```bash
-idm init scene.json            # starter scene (point "font" at a real .ttf)
-idm compile scene.json         # -> scene.idm, schema-validated, prints a summary
-idm library list               # pick (or invent) a library to upload into
-idm render scene.json --library "Demos" -o scene.mp4
 ```
 
 Shorthand: a bare `.json` argument means `compile`, a bare `.idm` means `inspect`:
@@ -114,8 +107,8 @@ idm scene.idm                  # decode back to vasco JSON
 | `idm init [scene.json]` | write a starter scene |
 | `idm auth login \| status` | manage credentials |
 | `idm schema` | print the VASCO JSON Schema |
-| `idm skill install` | install the `idm-maker` agent skill into `~/.claude/skills` |
-| `idm update` | reinstall the latest from this repo |
+| `idm skill install [--claude] [--codex] [--cursor] [--cowork]` | install the agent skill |
+| `idm update` | self-update to the latest release |
 
 Global flag `--json` on `compile` / `validate` / `render` / `auth` / `library` emits machine-readable output.
 
@@ -125,54 +118,13 @@ The 30-second version: layers render bottom-first; times are seconds; colors are
 
 **Full reference:** [skills/idm-maker/references/format.md](skills/idm-maker/references/format.md). Working examples in [examples/](examples/) (`idm compile examples/demo.json`).
 
-## Agent skills
+## Built for
 
-Two skills ship in this repo:
+- **Coding agents** — Claude Code, Codex, Cursor, Cowork (see the skills above)
+- **CI/CD pipelines** — templated video generation from data
+- **Anyone authoring IDM** without After Effects
 
-- **[SKILL.md](SKILL.md)** (repo root) — teaches an agent to drive this CLI.
-- **[skills/idm-maker/](skills/idm-maker/)** — the full authoring skill: scene format, tween engine, effects, masks, render workflow.
-
-### Claude Code
-
-```bash
-idm skill install            # -> ~/.claude/skills/idm-maker
-```
-
-(The install scripts already run this for you.) Then just ask Claude Code to *"make an idm of …"* — the skill triggers, writes the scene JSON, and drives `idm`. Manual alternative: copy `skills/idm-maker/` into `~/.claude/skills/`.
-
-### OpenAI Codex
-
-Codex reads the same SKILL.md format from `~/.codex/skills`:
-
-```bash
-idm skill install --codex    # -> ~/.codex/skills/idm-maker
-```
-
-(`idm skill install` with no flags installs for Claude Code, and for Codex too when a `~/.codex` directory exists.) Manual alternative: copy `skills/idm-maker/` into `~/.codex/skills/`.
-
-### Cursor
-
-Cursor reads the same SKILL.md format from `.cursor/skills`:
-
-```bash
-idm skill install --cursor   # -> ~/.cursor/skills/idm-maker (+ ./.cursor/skills when run inside a Cursor project)
-```
-
-For a team project, commit `.cursor/skills/idm-maker/` to the repo so everyone gets it. (`idm skill install` with no flags also targets Cursor automatically when `~/.cursor` exists.)
-
-### Claude Cowork / claude.ai
-
-Cowork takes skills as a ZIP uploaded in the app rather than from a folder:
-
-```bash
-idm skill install --cowork   # writes ./idm-maker-skill.zip
-```
-
-Then in Cowork: **Customize** (left sidebar) → **+** → **Skills** tab → upload the ZIP. The same upload makes the skill available in claude.ai chat too.
-
-### Other agents
-
-Point the agent at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — they are plain markdown with no tooling assumptions.
+Agent-first by design: `--json` gives machine-readable results on stdout with structured errors on stderr; stable exit codes (`0` ok · `1` compile/schema · `2` missing file · `3` auth · `4` render timeout); non-interactive by default (with env credentials and `--library` set, nothing reads a TTY); self-describing via `idm schema`, which needs no auth or network.
 
 ## License
 
