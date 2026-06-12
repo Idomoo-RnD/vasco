@@ -150,6 +150,16 @@ idm skill install --codex    # -> ~/.codex/skills/idm-maker
 
 (`idm skill install` with no flags installs for Claude Code, and for Codex too when a `~/.codex` directory exists.) Manual alternative: copy `skills/idm-maker/` into `~/.codex/skills/`.
 
+### Claude Cowork / claude.ai
+
+Cowork takes skills as a ZIP uploaded in the app rather than from a folder:
+
+```bash
+idm skill install --cowork   # writes ./idm-maker-skill.zip
+```
+
+Then in Cowork: **Customize** (left sidebar) → **+** → **Skills** tab → upload the ZIP. The same upload makes the skill available in claude.ai chat too.
+
 ### Other agents
 
 Point the agent at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — they are plain markdown with no tooling assumptions.

@@ -21,6 +21,7 @@ import Ajv from 'ajv';
 import { compileScene } from '../src/compile.mjs';
 import { resolveCredentials, storeCredentials, CRED_PATH } from '../src/auth.mjs';
 import { renderIdm, download, getToken, listLibraries } from '../src/render.mjs';
+import { makeZip } from '../src/zip.mjs';
 import { VERSION, REPO, RAW } from '../src/version.mjs';
 
 const args = process.argv.slice(2);
@@ -325,15 +326,19 @@ async function main() {
 
         case 'skill': {
             if (args[1] !== 'install')
-                fail('Usage: idm skill install [--claude] [--codex]   (installs the idm-maker authoring skill for Claude Code and/or OpenAI Codex)');
+                fail('Usage: idm skill install [--claude] [--codex] [--cowork]   (Claude Code / OpenAI Codex dirs, or a ZIP for Claude Cowork)');
             // Claude Code reads ~/.claude/skills, OpenAI Codex reads ~/.codex/skills —
-            // same SKILL.md format. Default: Claude Code always, Codex when ~/.codex exists.
-            const wantClaude = flag('--claude') || !flag('--codex');
-            const wantCodex = flag('--codex') || (!flag('--claude') && existsSync(join(homedir(), '.codex')));
+            // same SKILL.md format. Claude Cowork / claude.ai take the skill as a ZIP
+            // uploaded in the app, so --cowork packages one instead of copying files.
+            const anyFlag = flag('--claude') || flag('--codex') || flag('--cowork');
+            const wantClaude = flag('--claude') || !anyFlag;
+            const wantCodex = flag('--codex') || (!anyFlag && existsSync(join(homedir(), '.codex')));
+            const wantCowork = flag('--cowork');
             const targets = [];
             if (wantClaude) targets.push(join(homedir(), '.claude', 'skills', 'idm-maker'));
             if (wantCodex) targets.push(join(homedir(), '.codex', 'skills', 'idm-maker'));
             const files = ['SKILL.md', 'references/format.md'];
+            const messages = [];
             try {
                 const contents = [];
                 for (const f of files) {
@@ -341,17 +346,29 @@ async function main() {
                     if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
                     contents.push([f, await r.text()]);
                 }
-                for (const dest of targets)
+                for (const dest of targets) {
                     for (const [f, text] of contents) {
                         const path = join(dest, f);
                         mkdirSync(dirname(path), { recursive: true });
                         writeFileSync(path, text);
                     }
+                    messages.push(`✅ installed idm-maker skill to ${dest}`);
+                }
+                if (wantCowork) {
+                    const zip = makeZip(contents.map(([f, text]) => ({
+                        name: `idm-maker/${f}`, data: Buffer.from(text, 'utf8'),
+                    })));
+                    const zipPath = resolve('idm-maker-skill.zip');
+                    writeFileSync(zipPath, zip);
+                    targets.push(zipPath);
+                    messages.push(`✅ packaged ${zipPath}`,
+                        '   Upload it in Claude Cowork: Customize (left sidebar) → "+" → Skills tab → upload the ZIP.',
+                        '   The same upload also makes the skill available in claude.ai chat.');
+                }
             } catch (e) {
                 fail(`Skill install failed: ${e.message}`, 2);
             }
-            out({ ok: true, installed: targets },
-                targets.map(t => `✅ installed idm-maker skill to ${t}`).join('\n'));
+            out({ ok: true, installed: targets }, messages.join('\n'));
             break;
         }
 
@@ -428,7 +445,10 @@ Usage:
   idm init     [scene.json]                          write a starter scene
   idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
   idm schema                                         print the VASCO JSON Schema
-  idm skill    install                               install the idm-maker agent skill (~/.claude/skills)
+  idm skill    install [--claude] [--codex] [--cowork]
+                                                     install the idm-maker agent skill: Claude Code
+                                                     (~/.claude/skills), OpenAI Codex (~/.codex/skills),
+                                                     or package a ZIP to upload into Claude Cowork
   idm update                                         self-update to the latest release
   idm version
 
