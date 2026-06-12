@@ -17,5 +17,20 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm install
       - run: npm test
-      - name: CLI smoke (compile example via bin)
-        run: node bin/idm.mjs compile examples/demo.json -o /tmp/demo.idm --json || node bin/idm.mjs compile examples/demo.json -o demo_ci.idm --json
+      - name: CLI smoke via bin
+        run: node bin/idm.mjs compile examples/demo.json -o demo_ci.idm --json
+  sea-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node scripts/build-sea.mjs
+      - name: Binary smoke
+        shell: bash
+        run: ./dist/idm_* version && ./dist/idm_* compile examples/demo.json -o sea_ci.idm --json

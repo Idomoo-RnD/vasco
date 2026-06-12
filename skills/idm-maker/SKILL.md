@@ -7,7 +7,7 @@ description: Author Idomoo IDM video files locally from a compact scene JSON, co
 
 Turn a short "scene" JSON into a full VASCO project, compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
 
-**CLI:** `idm` (install: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash`, or `npm install -g git+https://github.com/Idomoo-RnD/vasco.git`). Verify with `idm version`.
+**CLI:** `idm` — standalone binary, no runtime needed. Install: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`). Verify with `idm version`.
 
 ## Workflow
 

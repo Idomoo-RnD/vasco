@@ -38,6 +38,8 @@ idm render scene.json --library "My Library" -o out.mp4
 
 ## Install
 
+**Single standalone binary — no runtime required.** macOS and Linux (amd64 + arm64):
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash
 ```
@@ -48,17 +50,14 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
 ```
 
-Both install the `idm` command (Node ≥ 18 required) and the `idm-maker` agent skill. Or by hand:
+Both download the platform binary from [releases](https://github.com/Idomoo-RnD/vasco/releases), verify its checksum, install it (`~/.local/bin/idm` on Unix, `%LOCALAPPDATA%\Programs\idm\idm.exe` on Windows), and install the `idm-maker` agent skill into `~/.claude/skills`.
 
-```bash
-npm install -g git+https://github.com/Idomoo-RnD/vasco.git
-idm skill install        # optional: agent authoring skill -> ~/.claude/skills
-```
+From source instead (Node ≥ 18): `git clone` this repo, `npm install`, then `node bin/idm.mjs` — or `node scripts/build-sea.mjs` to produce your own binary.
 
 ## Updates
 
 ```bash
-idm update               # reinstall the latest from this repo
+idm update               # self-update to the latest release
 ```
 
 ## Authenticate

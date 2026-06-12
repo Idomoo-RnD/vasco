@@ -40,11 +40,29 @@ codec, and optionally renders an MP4 via the Idomoo API.
 - `render` must never silently pick an upload library — interactive runs prompt,
   non-interactive runs fail with the library list.
 
+## Build & distribution
+
+Distribution is **standalone binaries** (Node SEA), built per platform by
+`.github/workflows/release.yml` on tag push (`git tag v1.x.y && git push --tags`)
+and attached to GitHub releases with a `checksums.txt`. `scripts/install.sh` /
+`install.ps1` download + verify + install them; `idm update` self-replaces the
+running binary from the latest release.
+
+`scripts/build-sea.mjs` builds locally for the current platform: esbuild bundles
+`bin/idm.mjs` into one CJS file, `node --experimental-sea-config` makes the blob,
+postject injects it into a copy of the node binary (fuse sentinel
+`NODE_SEA_FUSE_<hash>` — note: NOT `NODE_SEA_BLOB_FUSE`). Everything in `bin/`
+must stay statically importable: no `import.meta.url` paths, no package.json
+reads, no dynamic `import()` with computed paths. Version lives in
+`src/version.mjs`.
+
 ## Testing
 
 ```bash
-npm test            # test/smoke.mjs — compile examples, encode, decode, assert round-trip
+npm test                    # test/smoke.mjs — compile examples, encode, decode, assert round-trip
+node scripts/build-sea.mjs  # then: ./dist/idm_<os>_<arch> compile examples/demo.json
 ```
 
-No network or credentials needed. CI runs it on Node 18/20/22. For a live check:
-`idm auth status`, then render `examples/demo.json` into a scratch library.
+No network or credentials needed. CI runs the smoke test on Node 18/20/22,
+ubuntu + windows. For a live check: `idm auth status`, then render
+`examples/demo.json` into a scratch library.
