@@ -26,7 +26,7 @@ The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaS
 
 ## Workflow
 
-1. **Ask the user about assets first**: do they have images, video clips, audio/music, fonts, or brand colors to use? Get file paths for anything they have. Text layers REQUIRE a `.ttf`/`.otf` font file. If they have no assets (or for missing pieces), generate placeholders (flat/gradient PNGs via a small Node script) and say so in the result. Skip the question only when the user already specified assets or explicitly asked for placeholders.
+1. **Ask the user about assets first**: do they have images, video clips, audio/music, fonts, or brand colors to use, **or should the CLI generate them?** Get file paths for anything they already have. For anything missing, the CLI can generate real assets via the Idomoo AI API — `idm generate image|video|narration|music` (needs auth; saves files to a folder). Read the *Generating assets* section in [references/format.md](references/format.md) for each tool's params and output. Use a generated/placeholder font only as a last resort — text layers REQUIRE a real `.ttf`/`.otf`. Skip the question only when the user already specified assets or explicitly asked you to generate or use placeholders.
 2. Understand what video the user wants (size, duration, layers, motion).
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
 4. Compile: `idm compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.

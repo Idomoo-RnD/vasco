@@ -116,14 +116,14 @@ function cleanSceneJson(sceneJson, sceneId) {
     };
 }
 
-async function startRender(base, H, sceneJson, sceneId, outHeight, quality, log) {
+async function startRender(base, H, sceneJson, sceneId, outHeight, quality, posterTime, log) {
     let scene = cleanSceneJson(sceneJson, sceneId);
     for (let attempt = 0; attempt < 6; attempt++) {
         const body = {
             timeline: { scene_order: 'linear', scenes: [scene] },
             output: {
                 video: [{ format: 'mp4', quality, height: outHeight }],
-                jpg: [{ height: outHeight, time: 1 }],
+                jpg: [{ height: outHeight, time: posterTime }],
             },
         };
         const r = await jfetch(`${base}/scenes/generate`, {
@@ -148,7 +148,7 @@ async function startRender(base, H, sceneJson, sceneId, outHeight, quality, log)
 }
 
 export async function renderIdm({ idmBytes, filename, accountId, secret, base = DEFAULT_BASE,
-    libraryName, outHeight, quality = 26, log = () => {} }) {
+    libraryName, outHeight, quality = 26, posterTime = 1, log = () => {} }) {
     if (!libraryName) throw new Error('libraryName is required — pick one with `idm library list` or name a new one');
     log('Authenticating with Idomoo...');
     const token = await getToken(base, accountId, secret);
@@ -158,7 +158,7 @@ export async function renderIdm({ idmBytes, filename, accountId, secret, base = 
     const { sceneJson, sceneId } = await uploadAndExport(base, H, libraryId, filename, idmBytes, log);
 
     log('Starting render...');
-    const init = await startRender(base, H, sceneJson, sceneId, outHeight, quality, log);
+    const init = await startRender(base, H, sceneJson, sceneId, outHeight, quality, posterTime, log);
     const out = init.output ?? {};
     const videoUrl = (out.video ?? []).map(v => v?.links?.url).find(Boolean) ?? null;
     const posterUrl = (out.jpg ?? []).map(j => j?.links?.url).find(Boolean) ?? null;

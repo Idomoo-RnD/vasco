@@ -2,7 +2,7 @@
 
 Compiled by `idm compile <scene.json>` into VASCO, schema-validated, then encoded to `.idm`.
 
-Contents: [Scene](#scene) · [Layers](#layers-common) · [Text](#text) · [Image/Video](#image--video-media) · [Solid](#solid) · [Audio](#audio) · [Comp layers](#sub-compositions) · [Camera](#camera) · [Tweens](#tween-engine-animate) · [Effects](#effects) · [Masks](#masks) · [Track mattes](#track-mattes) · [Personalization](#personalization--design-for-replaceable-elements) · [Graphs](#graphs--charts--dynamic-images) · [Passthrough](#raw-vasco-passthrough)
+Contents: [Scene](#scene) · [Layers](#layers-common) · [Text](#text) · [Image/Video](#image--video-media) · [Solid](#solid) · [Audio](#audio) · [Comp layers](#sub-compositions) · [Camera](#camera) · [Tweens](#tween-engine-animate) · [Effects](#effects) · [Masks](#masks) · [Track mattes](#track-mattes) · [Generating assets](#generating-assets-idomoo-ai-api) · [Personalization](#personalization--design-for-replaceable-elements) · [Graphs](#graphs--charts--dynamic-images) · [Passthrough](#raw-vasco-passthrough)
 
 ## Scene
 
@@ -188,6 +188,22 @@ Types: `alpha alpha_inverted luma luma_inverted`.
 ## Colors
 
 Hex anywhere a color is expected: `#rgb`, `#rrggbb`, `#rrggbbaa`. Layer/text-style colors are RGB (alpha dropped); effect and animator colors keep alpha. Raw `[r,g,b(,a)]` arrays (0..1 floats) also accepted.
+
+## Generating assets (Idomoo AI API)
+
+The CLI can generate the media an IDM needs, via `idm generate <kind>`. Every command needs Idomoo auth (`idm auth login` or `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`) and **saves the file to a folder** — `./idm_assets/` by default, `--out-dir <dir>` to change it, or `-o <file>` for an exact path. The saved local path is what you put in the scene's `src`; the command also prints the remote `url`. Add `--json` for `{ ok, type, path, url, ... }`.
+
+Workflow: generate an **image** → optionally **animate** it into a video clip (animate takes the image's *url*, printed by the image command) → generate **narration** and **music** for the audio track. Then reference the saved files from the scene.
+
+| command | params | output |
+|---|---|---|
+| `idm generate voices [--search <text>] [--json]` | `--search` filters by name/gender/accent/use-case | prints `voice_id  name · gender · accent` rows — pick a `voice_id` for narration |
+| `idm generate image "<prompt>"` | `--aspect` one of `16:9 4:3 3:4 1:1 9:16 21:9` (default `1:1`) · `--colors "#hex,#hex"` brand palette · `--reference <url>` reference image | a PNG (async, ~10–20s). Prints local path + remote url. Use `--aspect` matching the comp (e.g. `9:16`) |
+| `idm generate video <image-url>` | positional = an image **url** (use the url printed by `generate image`) · `--prompt "<motion>"` describes the camera/movement · `--duration <sec>` (default 5) · `--ratio <e.g. 9:16>` | an MP4 image-to-video clip (async, ~1–3 min). Reference it as a `video` layer (`loop: true` to hold the comp) |
+| `idm generate narration "<text>" --voice <voice_id>` | `--voice` required (from `generate voices`) · `--normalize <mode>` | an MP3 (sync) + spoken `duration` in seconds — size the layer/scene around it. Reference as an `audio` layer |
+| `idm generate music "<prompt>" [--duration <sec>]` | `--duration` seconds (default 30) | an instrumental track. Reference as an `audio` layer at low `volume` with `ducking: true` so it sits under narration |
+
+Notes: image and video are **asynchronous** (the CLI submits, polls, then downloads — just wait). Narration is synchronous. Generated asset URLs are temporary, so rely on the **downloaded local file**. Match `--aspect`/`--ratio` to the comp dimensions, and for personalized graphs generate the image at its canonical/full state (see *Graphs & charts* below).
 
 ## Personalization — design for replaceable elements
 

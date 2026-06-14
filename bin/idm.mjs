@@ -21,6 +21,7 @@ import Ajv from 'ajv';
 import { compileScene } from '../src/compile.mjs';
 import { resolveCredentials, storeCredentials, CRED_PATH } from '../src/auth.mjs';
 import { renderIdm, download, getToken, listLibraries } from '../src/render.mjs';
+import { generateImage, animateImage, narrate, generateMusic, listVoices } from '../src/ai.mjs';
 import { makeZip } from '../src/zip.mjs';
 import { VERSION, REPO, RAW } from '../src/version.mjs';
 
@@ -28,7 +29,7 @@ const args = process.argv.slice(2);
 
 // `idm scene.json` / `idm file.idm` — a bare file arg implies the command.
 const COMMANDS = ['compile', 'build', 'validate', 'inspect', 'init', 'render',
-    'auth', 'library', 'schema', 'skill', 'update', 'help', 'version'];
+    'auth', 'library', 'generate', 'schema', 'skill', 'update', 'help', 'version'];
 if (args[0] && !COMMANDS.includes(args[0]) && !args[0].startsWith('-')) {
     if (/\.json$/i.test(args[0])) args.unshift('compile');
     else if (/\.idm$/i.test(args[0])) args.unshift('inspect');
@@ -242,6 +243,7 @@ async function main() {
             const comp = doc ? doc.compositions[doc.entry_point] : null;
             const outHeight = Number(opt('--height', comp ? String(comp.height) : '1080'));
             const quality = Number(opt('--quality', '26'));
+            const posterTime = Number(opt('--poster-time', '1'));
             const outPath = resolve(opt('-o', opt('--out', filename.replace(/\.idm$/i, '') + '.mp4')));
 
             try {
@@ -249,7 +251,7 @@ async function main() {
                     idmBytes, filename,
                     accountId: creds.account_id, secret: creds.secret_key,
                     base: apiBase(), libraryName: library,
-                    outHeight, quality,
+                    outHeight, quality, posterTime,
                     log: m => { if (!JSON_MODE) console.log('  ' + m); },
                 });
                 if (!JSON_MODE) console.log('⬇️  downloading MP4...');
@@ -315,6 +317,93 @@ async function main() {
                 else for (const l of libs) console.log(`${l.id}\t${l.name}`);
             } catch (e) {
                 fail(e.message, 3);
+            }
+            break;
+        }
+
+        case 'generate': {
+            const sub = args[1];
+            const SUBS = ['image', 'video', 'narration', 'music', 'voices'];
+            if (!SUBS.includes(sub))
+                fail(`Usage: idm generate <image|video|narration|music|voices> ...
+  idm generate voices [--search <text>] [--json]
+  idm generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>] [-o file | --out-dir dir]
+  idm generate video <image-url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
+  idm generate narration "<text>" --voice <voice_id> [-o file | --out-dir dir]
+  idm generate music "<prompt>" [--duration 30] [-o file | --out-dir dir]`);
+
+            const creds = getCreds();
+            const ctx = { accountId: creds.account_id, secret: creds.secret_key, authBase: apiBase(),
+                log: m => { if (!JSON_MODE) console.log('  ' + m); } };
+
+            // download an asset url into the chosen folder; -o overrides path,
+            // else --out-dir (default ./idm_assets) + the url's basename.
+            const saveAsset = async (url, fallbackName) => {
+                let outPath = opt('-o', opt('--out'));
+                if (!outPath) {
+                    const dir = resolve(opt('--out-dir', 'idm_assets'));
+                    let name = basename(new URL(url).pathname) || fallbackName;
+                    if (!/\.[a-z0-9]+$/i.test(name)) name = fallbackName;
+                    outPath = join(dir, name);
+                }
+                outPath = resolve(outPath);
+                mkdirSync(dirname(outPath), { recursive: true });
+                await download(url, outPath);
+                return outPath;
+            };
+
+            if (sub === 'voices') {
+                const search = (opt('--search') ?? '').toLowerCase();
+                let voices = await listVoices(ctx);
+                if (search) voices = voices.filter(v =>
+                    [v.name, v.gender, v.accent, v.use_case, v.description].join(' ').toLowerCase().includes(search));
+                if (JSON_MODE) out({ ok: true, voices });
+                else {
+                    if (!voices.length) { console.log('No voices found.'); break; }
+                    for (const v of voices)
+                        console.log(`${v.voice_id}\t${v.name}${v.gender ? ' · ' + v.gender : ''}${v.accent ? ' · ' + v.accent : ''}`);
+                }
+                break;
+            }
+
+            try {
+                if (sub === 'image') {
+                    const prompt = args[2];
+                    if (!prompt || prompt.startsWith('-')) fail('Usage: idm generate image "<prompt>" [--aspect 9:16] ...');
+                    const url = await generateImage({
+                        prompt, aspect: opt('--aspect', '1:1'), colors: opt('--colors'),
+                        referenceImage: opt('--reference'),
+                    }, ctx);
+                    const path = await saveAsset(url, 'image.png');
+                    out({ ok: true, type: 'image', path, url }, `✅ saved ${path}\n   url: ${url}`);
+                } else if (sub === 'video') {
+                    const imageUrl = args[2];
+                    if (!imageUrl || imageUrl.startsWith('-')) fail('Usage: idm generate video <image-url> [--prompt "..."] [--duration 5] ...');
+                    const url = await animateImage({
+                        imageUrl, prompt: opt('--prompt'),
+                        duration: Number(opt('--duration', '5')), ratio: opt('--ratio'),
+                    }, ctx);
+                    const path = await saveAsset(url, 'video.mp4');
+                    out({ ok: true, type: 'video', path, url }, `✅ saved ${path}\n   url: ${url}`);
+                } else if (sub === 'narration') {
+                    const text = args[2];
+                    if (!text || text.startsWith('-')) fail('Usage: idm generate narration "<text>" --voice <voice_id> ...');
+                    const voiceId = opt('--voice', opt('--voice-id'));
+                    if (!voiceId) fail('narration needs --voice <voice_id> — list options with `idm generate voices`', 1);
+                    const { url, duration } = await narrate({ text, voiceId, normalize: opt('--normalize') }, ctx);
+                    const path = await saveAsset(url, 'narration.mp3');
+                    out({ ok: true, type: 'narration', path, url, duration },
+                        `✅ saved ${path} (${duration}s)\n   url: ${url}`);
+                } else if (sub === 'music') {
+                    const prompt = args[2];
+                    if (!prompt || prompt.startsWith('-')) fail('Usage: idm generate music "<prompt>" [--duration 30] ...');
+                    const url = await generateMusic({ prompt, duration: Number(opt('--duration', '30')) }, ctx);
+                    const path = await saveAsset(url, 'music.mp3');
+                    out({ ok: true, type: 'music', path, url }, `✅ saved ${path}\n   url: ${url}`);
+                }
+            } catch (e) {
+                const msg = e?.message ?? String(e);
+                fail(msg, /OAuth failed/.test(msg) ? 3 : 1);
             }
             break;
         }
@@ -451,6 +540,8 @@ Usage:
                                                      upload to Idomoo, render, download MP4
                                                      (asks which library when run interactively)
   idm library  list                                  list Idomoo libraries (id + name)
+  idm generate image|video|narration|music|voices   generate IDM assets via the Idomoo AI API
+                                                     (saves files to ./idm_assets or -o; needs auth)
   idm init     [scene.json]                          write a starter scene
   idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
   idm schema                                         print the VASCO JSON Schema
