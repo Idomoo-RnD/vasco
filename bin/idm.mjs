@@ -451,7 +451,7 @@ async function main() {
                 addSkillDir(resolve('.agents'));
                 addSkillDir(resolve('.agent'));
             }
-            const files = ['SKILL.md', 'references/format.md'];
+            const files = ['SKILL.md', 'references/format.md', 'references/motion-design.md'];
             const messages = [];
             try {
                 const contents = [];

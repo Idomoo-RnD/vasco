@@ -68,6 +68,8 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 
 **Full reference** — read [references/format.md](references/format.md) before writing any non-trivial scene. It covers every layer type's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + shape morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough escape hatch.
 
+**Motion design** — for anything that should look polished, cinematic, high-end, or "great" (ads, title sequences, brand videos), read [references/motion-design.md](references/motion-design.md). It's a pro-level craft guide grounded in this engine: timing & spacing, the easing vocabulary (which ease for which feel), entrances/exits, kinetic text, beat transitions, effects with intent, depth/camera/atmosphere, rhythm to audio, polish details, anti-patterns, and drop-in keyframe recipes.
+
 ## Rules of thumb
 
 - Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Asset files must exist at compile time. A bundled free font ships with the repo at `examples/assets/DejaVuSans.ttf` (`idm schema` prints the full VASCO schema if you need an exotic property).
