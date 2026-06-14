@@ -196,10 +196,10 @@ class Compiler {
         const handled = new Set(['type', 'name', 'start', 'duration', 'first_frame', 'num_of_frames',
             'position', 'scale', 'rotation', 'anchor', 'animate', 'effects', 'mask', 'matte']);
 
-        // Motion blur is ON by default for every visual/camera layer (set
-        // motion_blur:false to opt out). Costs nothing on static layers and
-        // keeps animated motion looking smooth/cinematic.
-        if (isVisual || type === 'camera') {
+        // Motion blur is ON by default for every visual layer (set
+        // motion_blur:false to opt out). Camera layers are excluded — their
+        // motion_blur only passes through when set explicitly.
+        if (isVisual) {
             out.motion_blur = l.motion_blur ?? true;
             handled.add('motion_blur');
         }

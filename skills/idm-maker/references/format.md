@@ -34,7 +34,7 @@ Passthrough at comp level: `shutter_angle`, `shutter_phase`, `transition`.
 | `opacity` | 0..1 |
 | `blend` | blend mode: `normal add subtract multiply divide screen darken lighten difference exclusion overlay hardmix colordodge colorburn lineardodge linearburn linearlight vividlight pinlight hardlight softlight luminosity hue saturation color` |
 | `fit` | `"fit"` / `"fill"` or `{x, y, scale, scale_type}` — content alignment in box (media/solid/comp) |
-| `motion_blur` | **defaults to `true`** on every visual + camera layer — set `"motion_blur": false` to opt out. Smooths animated motion; no cost on static layers |
+| `motion_blur` | **defaults to `true`** on every visual layer — set `"motion_blur": false` to opt out. Smooths animated motion; no cost on static layers |
 | `animate` | tween channels, see below |
 | `effects` | inline effect list, see below |
 | `mask` | inline mask, see below |
