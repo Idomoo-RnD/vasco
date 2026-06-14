@@ -34,6 +34,7 @@ Passthrough at comp level: `shutter_angle`, `shutter_phase`, `transition`.
 | `opacity` | 0..1 |
 | `blend` | blend mode: `normal add subtract multiply divide screen darken lighten difference exclusion overlay hardmix colordodge colorburn lineardodge linearburn linearlight vividlight pinlight hardlight softlight luminosity hue saturation color` |
 | `fit` | `"fit"` / `"fill"` or `{x, y, scale, scale_type}` — content alignment in box (media/solid/comp) |
+| `motion_blur` | **defaults to `true`** on every visual + camera layer — set `"motion_blur": false` to opt out. Smooths animated motion; no cost on static layers |
 | `animate` | tween channels, see below |
 | `effects` | inline effect list, see below |
 | `mask` | inline mask, see below |
@@ -51,6 +52,12 @@ Position/scale/rotation compose to the VASCO 4×4 `transform`. Scaling/rotation 
 ```
 
 - `font` (required): path to .ttf/.otf — deduped into the asset table.
+- ⚠️ **The font MUST contain a glyph for every character in `text` (and every `styles` span).** The IDM only embeds the glyphs the font actually has — a character the font is missing renders as a blank/tofu box or breaks the render, producing a bad IDM. **Verify glyph coverage before the final compile**, especially for anything beyond plain A–Z/0–9: accented/non-Latin letters (é ñ ü 你好 العربية), currency (€ £ ₪ ₹), punctuation people paste in (curly quotes “ ” ‘ ’, en/em dashes – —, ellipsis …), symbols (™ © ® • → ✓ ★), and emoji. Many basic fonts (Arial, and even the bundled DejaVuSans for non-Latin scripts) lack these. Options, best first: (1) pick/generate a font that covers the script — e.g. a Noto family for the target language; (2) for a styled span, point that span's `font` at a font that has the glyph; (3) substitute an ASCII equivalent the font has (`->` for →, straight `"` for “”, `...` for …). When in doubt, run the glyph check below.
+- **Check coverage** with a quick Node snippet against the .ttf/.otf cmap before compiling:
+  ```bash
+  node -e 'const fs=require("fs");const b=fs.readFileSync(process.argv[1]);const dv=new DataView(b.buffer,b.byteOffset,b.byteLength);const nt=dv.getUint16(4);let off=0;for(let i=0;i<nt;i++){const o=12+i*16;if(b.toString("latin1",o,o+4)==="cmap"){off=dv.getUint32(o+8);break}}const cov=new Set();const ns=dv.getUint16(off+2);for(let i=0;i<ns;i++){const so=off+dv.getUint32(off+4+i*8+4);const fmt=dv.getUint16(so);if(fmt===4){const segX2=dv.getUint16(so+6),sc=segX2/2;const endO=so+14,startO=endO+segX2+2,deltaO=startO+segX2,rangeO=deltaO+segX2;for(let s=0;s<sc;s++){const end=dv.getUint16(endO+s*2),st=dv.getUint16(startO+s*2),d=dv.getUint16(deltaO+s*2),ro=dv.getUint16(rangeO+s*2);for(let c=st;c<=end&&c!==0xffff;c++){let g;if(ro===0)g=(c+d)&0xffff;else{const gi=dv.getUint16(rangeO+s*2+ro+(c-st)*2);g=gi===0?0:(gi+d)&0xffff}if(g)cov.add(c)}}}else if(fmt===12){const ng=dv.getUint32(so+12);for(let gi=0;gi<ng;gi++){const go=so+16+gi*12,sc=dv.getUint32(go),ec=dv.getUint32(go+4);for(let c=sc;c<=ec;c++)cov.add(c)}}}const text=process.argv[2]||"";const miss=[...new Set([...text])].filter(ch=>!cov.has(ch.codePointAt(0))&&ch.codePointAt(0)>32);console.log(miss.length?"MISSING glyphs: "+miss.map(c=>c+" (U+"+c.codePointAt(0).toString(16).toUpperCase()+")").join(", "):"all glyphs present")' ./font.ttf "Your exact text — €, “smart”, →"
+  ```
+  Empty/`all glyphs present` → safe to compile. Any `MISSING` → fix the font or the text first.
 - `align`: words from `left center right` + `top middle baseline bottom`, e.g. `"center middle"`, or `{"h": "center", "v": "top"}`.
 - **Rich spans** — `"styles": [{ "start": 0, "length": 5, "font": "./bold.ttf", "size": 60, "color": "#ff0000", "bold": true, "italic": true, "underline": true, "strikethrough": true, "highlight": "#ffff0080", "tracking": 0, "leading": 1.2, "shift": 0 }]` (`font` optional — defaults to the layer font).
 - **Per-character animators** (After-Effects-style): `"animators": [...]` — raw VASCO `IdmTextAnimator` objects, but `color` accepts hex and any object may carry `animate`. Example, words fading in one by one:

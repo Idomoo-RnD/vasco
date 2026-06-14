@@ -62,9 +62,10 @@ try {
             Write-Host '  1) Claude Code    (~\.claude\skills)'
             Write-Host '  2) OpenAI Codex   (~\.codex\skills)'
             Write-Host '  3) Cursor         (~\.cursor\skills + project .cursor\skills)'
-            Write-Host '  4) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)'
-            Write-Host '  5) All of the above'
-            Write-Host '  6) Skip'
+            Write-Host '  4) Antigravity    (IDE ~\.agents\skills + CLI ~\.gemini\antigravity-cli\skills)'
+            Write-Host '  5) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)'
+            Write-Host '  6) All of the above'
+            Write-Host '  7) Skip'
             try { $skillChoice = Read-Host 'Choice [1]' } catch { $skillChoice = '' }
             if (-not $skillChoice) { $skillChoice = '1' }
         } else {
@@ -73,17 +74,18 @@ try {
     }
 
     $choice = $skillChoice.ToLower()
-    if ($choice -match '(^|,)\s*6\s*(,|$)' -or $choice -match 'skip') {
+    if ($choice -match '(^|,)\s*7\s*(,|$)' -or $choice -match 'skip') {
         Write-Host 'Skipped skill install (rerun anytime with: idm skill install)'
     } elseif ($choice -eq 'auto') {
         & $exe skill install
     } else {
         $skillArgs = @()
-        if ($choice -match '(^|,)\s*1\s*(,|$)' -or $choice -match 'claude') { $skillArgs += '--claude' }
-        if ($choice -match '(^|,)\s*2\s*(,|$)' -or $choice -match 'codex')  { $skillArgs += '--codex' }
-        if ($choice -match '(^|,)\s*3\s*(,|$)' -or $choice -match 'cursor') { $skillArgs += '--cursor' }
-        if ($choice -match '(^|,)\s*4\s*(,|$)' -or $choice -match 'cowork') { $skillArgs += '--cowork' }
-        if ($choice -match '(^|,)\s*5\s*(,|$)' -or $choice -match 'all')    { $skillArgs = @('--claude','--codex','--cursor','--cowork') }
+        if ($choice -match '(^|,)\s*1\s*(,|$)' -or $choice -match 'claude')      { $skillArgs += '--claude' }
+        if ($choice -match '(^|,)\s*2\s*(,|$)' -or $choice -match 'codex')       { $skillArgs += '--codex' }
+        if ($choice -match '(^|,)\s*3\s*(,|$)' -or $choice -match 'cursor')      { $skillArgs += '--cursor' }
+        if ($choice -match '(^|,)\s*4\s*(,|$)' -or $choice -match 'antigravity') { $skillArgs += '--antigravity' }
+        if ($choice -match '(^|,)\s*5\s*(,|$)' -or $choice -match 'cowork')      { $skillArgs += '--cowork' }
+        if ($choice -match '(^|,)\s*6\s*(,|$)' -or $choice -match 'all')         { $skillArgs = @('--claude','--codex','--cursor','--antigravity','--cowork') }
         if ($choice -match 'both') { $skillArgs = @('--claude','--codex') }
         if ($skillArgs.Count -eq 0) { $skillArgs = @('--claude') }
         & $exe skill install @skillArgs

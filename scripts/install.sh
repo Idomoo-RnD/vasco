@@ -83,26 +83,28 @@ if [ -z "$SKILL_CHOICE" ]; then
     log "  1) Claude Code    (~/.claude/skills)"
     log "  2) OpenAI Codex   (~/.codex/skills)"
     log "  3) Cursor         (~/.cursor/skills + project .cursor/skills)"
-    log "  4) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)"
-    log "  5) All of the above"
-    log "  6) Skip"
+    log "  4) Antigravity    (IDE ~/.agents/skills + CLI ~/.gemini/antigravity-cli/skills)"
+    log "  5) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)"
+    log "  6) All of the above"
+    log "  7) Skip"
     printf 'Choice [1]: ' > /dev/tty
     read -r SKILL_CHOICE < /dev/tty || SKILL_CHOICE=""
     [ -n "$SKILL_CHOICE" ] || SKILL_CHOICE="1"
   else
-    SKILL_CHOICE="auto"   # non-interactive: Claude Code (+ Codex/Cursor when their dirs exist)
+    SKILL_CHOICE="auto"   # non-interactive: Claude Code (+ others when their dirs exist)
   fi
 fi
 
 FLAGS=""
-case ",$SKILL_CHOICE," in *,6,*|*skip*) FLAGS="skip" ;; esac
+case ",$SKILL_CHOICE," in *,7,*|*skip*) FLAGS="skip" ;; esac
 if [ "$FLAGS" != "skip" ]; then
-  case ",$SKILL_CHOICE," in *,1,*|*claude*) FLAGS="$FLAGS --claude" ;; esac
-  case ",$SKILL_CHOICE," in *,2,*|*codex*)  FLAGS="$FLAGS --codex"  ;; esac
-  case ",$SKILL_CHOICE," in *,3,*|*cursor*) FLAGS="$FLAGS --cursor" ;; esac
-  case ",$SKILL_CHOICE," in *,4,*|*cowork*) FLAGS="$FLAGS --cowork" ;; esac
-  case ",$SKILL_CHOICE," in *,5,*|*all*)    FLAGS=" --claude --codex --cursor --cowork" ;; esac
-  case ",$SKILL_CHOICE," in *both*)         FLAGS=" --claude --codex" ;; esac
+  case ",$SKILL_CHOICE," in *,1,*|*claude*)      FLAGS="$FLAGS --claude" ;; esac
+  case ",$SKILL_CHOICE," in *,2,*|*codex*)       FLAGS="$FLAGS --codex"  ;; esac
+  case ",$SKILL_CHOICE," in *,3,*|*cursor*)      FLAGS="$FLAGS --cursor" ;; esac
+  case ",$SKILL_CHOICE," in *,4,*|*antigravity*) FLAGS="$FLAGS --antigravity" ;; esac
+  case ",$SKILL_CHOICE," in *,5,*|*cowork*)      FLAGS="$FLAGS --cowork" ;; esac
+  case ",$SKILL_CHOICE," in *,6,*|*all*)         FLAGS=" --claude --codex --cursor --antigravity --cowork" ;; esac
+  case ",$SKILL_CHOICE," in *both*)              FLAGS=" --claude --codex" ;; esac
 fi
 
 if [ "$FLAGS" = "skip" ]; then

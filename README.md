@@ -39,9 +39,10 @@ The installer already offers this menu (Claude Code / Codex / Cursor / Cowork / 
 | **Claude Code** | `idm skill install` | `~/.claude/skills/idm-maker` |
 | **OpenAI Codex** | `idm skill install --codex` | `~/.codex/skills/idm-maker` |
 | **Cursor** | `idm skill install --cursor` | `~/.cursor/skills/idm-maker` + project `.cursor/skills` |
+| **Google Antigravity** | `idm skill install --antigravity` | IDE `~/.agents/skills/idm-maker` + CLI `~/.gemini/antigravity-cli/skills/idm-maker` (+ project `.agents`/`.agent`) |
 | **Claude Cowork / claude.ai** | `idm skill install --cowork` | writes `idm-maker-skill.zip` — upload it in the app: **Customize → + → Skills** |
 
-Flags combine (`--claude --cursor --cowork`). For Cursor team projects, commit `.cursor/skills/idm-maker/` to the repo. Other agents: point them at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — plain markdown, no tooling assumptions.
+Flags combine (`--claude --cursor --antigravity --cowork`). For Cursor team projects, commit `.cursor/skills/idm-maker/` to the repo. Other agents: point them at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — plain markdown, no tooling assumptions.
 
 Once installed, just ask your agent to *"make an idm of …"* — the skill triggers, writes the scene JSON, and drives `idm`.
 

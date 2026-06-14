@@ -415,25 +415,41 @@ async function main() {
 
         case 'skill': {
             if (args[1] !== 'install')
-                fail('Usage: idm skill install [--claude] [--codex] [--cursor] [--cowork]   (agent skill dirs, or a ZIP for Claude Cowork)');
+                fail('Usage: idm skill install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]   (agent skill dirs, or a ZIP for Claude Cowork)');
             // Same SKILL.md format everywhere: Claude Code reads ~/.claude/skills,
-            // OpenAI Codex ~/.codex/skills, Cursor ~/.cursor/skills (personal) and
-            // .cursor/skills in a project. Claude Cowork / claude.ai take the skill
-            // as a ZIP uploaded in the app, so --cowork packages one instead.
-            const anyFlag = flag('--claude') || flag('--codex') || flag('--cursor') || flag('--cowork');
+            // OpenAI Codex ~/.codex/skills, Cursor ~/.cursor/skills, Google Antigravity
+            // the IDE at ~/.agents/skills and the CLI at ~/.gemini/antigravity-cli/skills
+            // (plus matching project dirs). Claude Cowork / claude.ai take the skill as
+            // a ZIP uploaded in the app, so --cowork packages one instead.
+            const SKILL = 'idm-maker';
+            const home = homedir();
+            const anyFlag = flag('--claude') || flag('--codex') || flag('--cursor') || flag('--antigravity') || flag('--cowork');
             const wantClaude = flag('--claude') || !anyFlag;
-            const wantCodex = flag('--codex') || (!anyFlag && existsSync(join(homedir(), '.codex')));
-            const wantCursor = flag('--cursor') || (!anyFlag && existsSync(join(homedir(), '.cursor')));
+            const wantCodex = flag('--codex') || (!anyFlag && existsSync(join(home, '.codex')));
+            const wantCursor = flag('--cursor') || (!anyFlag && existsSync(join(home, '.cursor')));
+            const wantAntigravity = flag('--antigravity')
+                || (!anyFlag && (existsSync(join(home, '.agents')) || existsSync(join(home, '.gemini', 'antigravity-cli'))));
             const wantCowork = flag('--cowork');
             const targets = [];
-            if (wantClaude) targets.push(join(homedir(), '.claude', 'skills', 'idm-maker'));
-            if (wantCodex) targets.push(join(homedir(), '.codex', 'skills', 'idm-maker'));
+            // adds <base>/skills/<SKILL> when base exists, or always when force=true
+            const addSkillDir = (base, force = false) => {
+                if (force || existsSync(base)) targets.push(join(base, 'skills', SKILL));
+            };
+            if (wantClaude) targets.push(join(home, '.claude', 'skills', SKILL));
+            if (wantCodex) targets.push(join(home, '.codex', 'skills', SKILL));
             if (wantCursor) {
-                targets.push(join(homedir(), '.cursor', 'skills', 'idm-maker'));
-                // also drop it into the current project when it is Cursor-enabled
+                targets.push(join(home, '.cursor', 'skills', SKILL));
                 const projCursor = resolve('.cursor');
-                if (existsSync(projCursor) && projCursor !== join(homedir(), '.cursor'))
-                    targets.push(join(projCursor, 'skills', 'idm-maker'));
+                if (existsSync(projCursor) && projCursor !== join(home, '.cursor'))
+                    targets.push(join(projCursor, 'skills', SKILL));
+            }
+            if (wantAntigravity) {
+                // both products' global dirs (IDE + CLI) — user asked for ui and terminal
+                targets.push(join(home, '.agents', 'skills', SKILL));                       // IDE (UI)
+                targets.push(join(home, '.gemini', 'antigravity-cli', 'skills', SKILL));     // CLI (terminal)
+                // project scope: .agents (IDE) and .agent (CLI) when present in the repo
+                addSkillDir(resolve('.agents'));
+                addSkillDir(resolve('.agent'));
             }
             const files = ['SKILL.md', 'references/format.md'];
             const messages = [];
@@ -545,10 +561,12 @@ Usage:
   idm init     [scene.json]                          write a starter scene
   idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
   idm schema                                         print the VASCO JSON Schema
-  idm skill    install [--claude] [--codex] [--cursor] [--cowork]
+  idm skill    install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]
                                                      install the idm-maker agent skill: Claude Code
                                                      (~/.claude/skills), OpenAI Codex (~/.codex/skills),
                                                      Cursor (~/.cursor/skills + project .cursor/skills),
+                                                     Antigravity IDE + CLI (~/.agents/skills,
+                                                     ~/.gemini/antigravity-cli/skills),
                                                      or package a ZIP to upload into Claude Cowork
   idm update                                         self-update to the latest release
   idm version
