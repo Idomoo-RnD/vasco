@@ -454,8 +454,22 @@ async function main() {
             const files = ['SKILL.md', 'references/format.md', 'references/motion-design.md'];
             const messages = [];
             try {
+                // Prefer the repo's local skill files (dev checkout — instant, offline,
+                // no CDN lag); fall back to fetching the published copy (SEA binary,
+                // which has no bundled skills/ so these candidates won't exist).
+                const scriptDir = process.argv[1] ? dirname(process.argv[1]) : '';
+                const localRoots = [
+                    scriptDir ? join(scriptDir, '..', 'skills', 'idm-maker') : '',
+                    resolve('skills', 'idm-maker'),
+                ].filter(Boolean);
+                const findLocal = f => localRoots.map(r => join(r, f)).find(existsSync);
                 const contents = [];
                 for (const f of files) {
+                    const localPath = findLocal(f);
+                    if (localPath) {
+                        contents.push([f, readFileSync(localPath, 'utf8')]);
+                        continue;
+                    }
                     const r = await fetch(`${RAW}/skills/idm-maker/${f}`);
                     if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
                     contents.push([f, await r.text()]);
