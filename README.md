@@ -95,6 +95,20 @@ idm scene.json
 idm scene.idm                  # decode back to vasco JSON
 ```
 
+## 5. Generate assets (optional)
+
+Need media for a scene? The CLI generates it via the Idomoo AI API and **saves the file to a folder** (`./idm_assets/` by default, `--out-dir <dir>`, or `-o <file>`). Uses the same credentials as `render`.
+
+```bash
+idm generate voices --search female                          # pick a voice_id
+idm generate image "sunset over a community garden" --aspect 9:16
+idm generate video <image-url> --prompt "gentle push in" --duration 5
+idm generate narration "Thank you for your support." --voice <voice_id>
+idm generate music "warm acoustic folk instrumental" --duration 30
+```
+
+Typical chain: generate an **image**, feed the printed image URL to **video** (image-to-video), and add **narration** + **music** for the audio track — then point the scene's `src` at the saved files. Image and video are asynchronous (the CLI submits, polls, and downloads); narration is synchronous. Add `--json` for machine-readable `{ path, url, ... }`.
+
 ## Commands
 
 | command | what it does |
@@ -104,6 +118,7 @@ idm scene.idm                  # decode back to vasco JSON
 | `idm inspect <file.idm> [--assets <dir>]` | decode an `.idm` back to VASCO JSON, optionally extract embedded assets |
 | `idm render <scene.json\|.idm> --library <name-or-id> [-o out.mp4] [--height] [--quality]` | upload, render, download the MP4 (interactive runs ask which library) |
 | `idm library list` | list your Idomoo libraries |
+| `idm generate image\|video\|narration\|music\|voices …` | generate IDM assets via the Idomoo AI API, saved to a folder |
 | `idm init [scene.json]` | write a starter scene |
 | `idm auth login \| status` | manage credentials |
 | `idm schema` | print the VASCO JSON Schema |
