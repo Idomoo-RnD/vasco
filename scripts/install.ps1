@@ -1,20 +1,20 @@
-# IDM CLI installer (Windows) — downloads the standalone binary from GitHub
-# releases, verifies its checksum, installs to %LOCALAPPDATA%\Programs\idm,
-# adds it to the user PATH, and installs the idm-cli agent skill.
+# Strata CLI installer (Windows) — downloads the standalone binary from GitHub
+# releases, verifies its checksum, installs to %LOCALAPPDATA%\Programs\strata,
+# adds it to the user PATH, and installs the strata-cli agent skill.
 #
 #   irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
 #
-# Options (env vars): IDM_VERSION (tag, default latest), IDM_INSTALL_DIR,
-#   IDM_SKILL = claude | codex | both | skip | auto (default: ask when interactive)
+# Options (env vars): STRATA_VERSION (tag, default latest), STRATA_INSTALL_DIR,
+#   STRATA_SKILL = claude | codex | both | skip | auto (default: ask when interactive)
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 $Repo = 'Idomoo-RnD/vasco'
-$Version = if ($env:IDM_VERSION) { $env:IDM_VERSION } else { 'latest' }
-$InstallDir = if ($env:IDM_INSTALL_DIR) { $env:IDM_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\idm' }
-$Asset = 'idm_windows_amd64.exe'
+$Version = if ($env:STRATA_VERSION) { $env:STRATA_VERSION } else { 'latest' }
+$InstallDir = if ($env:STRATA_INSTALL_DIR) { $env:STRATA_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\strata' }
+$Asset = 'strata_windows_amd64.exe'
 
 $Base = if ($Version -eq 'latest') {
     "https://github.com/$Repo/releases/latest/download"
@@ -22,7 +22,7 @@ $Base = if ($Version -eq 'latest') {
     "https://github.com/$Repo/releases/download/$Version"
 }
 
-$Tmp = Join-Path $env:TEMP ("idm-install-" + [guid]::NewGuid().ToString('n').Substring(0, 8))
+$Tmp = Join-Path $env:TEMP ("strata-install-" + [guid]::NewGuid().ToString('n').Substring(0, 8))
 New-Item -ItemType Directory -Force $Tmp | Out-Null
 
 try {
@@ -41,7 +41,7 @@ try {
     Write-Host 'Checksum OK.'
 
     New-Item -ItemType Directory -Force $InstallDir | Out-Null
-    $exe = Join-Path $InstallDir 'idm.exe'
+    $exe = Join-Path $InstallDir 'strata.exe'
     if (Test-Path $exe) { Move-Item -Force $exe "$exe.old"; Remove-Item "$exe.old" -ErrorAction SilentlyContinue }
     Move-Item -Force (Join-Path $Tmp $Asset) $exe
 
@@ -54,16 +54,16 @@ try {
 
     Write-Host "Installed $exe ($(& $exe version))"
 
-    $skillChoice = $env:IDM_SKILL
+    $skillChoice = $env:STRATA_SKILL
     if (-not $skillChoice) {
         if ([Environment]::UserInteractive) {
             Write-Host ''
-            Write-Host 'Install the idm-cli agent skill? (multiple allowed, e.g. 1,3)'
+            Write-Host 'Install the strata-cli agent skill? (multiple allowed, e.g. 1,3)'
             Write-Host '  1) Claude Code    (~\.claude\skills)'
             Write-Host '  2) OpenAI Codex   (~\.codex\skills)'
             Write-Host '  3) Cursor         (~\.cursor\skills + project .cursor\skills)'
             Write-Host '  4) Antigravity    (IDE ~\.agents\skills + CLI ~\.gemini\antigravity-cli\skills)'
-            Write-Host '  5) Claude Cowork  (packages idm-cli-skill.zip to upload in the app)'
+            Write-Host '  5) Claude Cowork  (packages strata-cli-skill.zip to upload in the app)'
             Write-Host '  6) All of the above'
             Write-Host '  7) Skip'
             try { $skillChoice = Read-Host 'Choice [1]' } catch { $skillChoice = '' }
@@ -75,7 +75,7 @@ try {
 
     $choice = $skillChoice.ToLower()
     if ($choice -match '(^|,)\s*7\s*(,|$)' -or $choice -match 'skip') {
-        Write-Host 'Skipped skill install (rerun anytime with: idm skill install)'
+        Write-Host 'Skipped skill install (rerun anytime with: strata skill install)'
     } elseif ($choice -eq 'auto') {
         & $exe skill install
     } else {
@@ -93,9 +93,9 @@ try {
 
     Write-Host ''
     Write-Host 'Next steps:'
-    Write-Host '  idm init scene.json        # starter scene'
-    Write-Host '  idm compile scene.json     # compile locally'
-    Write-Host '  idm auth login             # add Idomoo credentials to render MP4s'
+    Write-Host '  strata init scene.json        # starter scene'
+    Write-Host '  strata compile scene.json     # compile locally'
+    Write-Host '  strata auth login             # add Idomoo credentials to render MP4s'
 }
 finally {
     Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue

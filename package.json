@@ -1,11 +1,10 @@
 {
-  "name": "idm-cli",
-  "version": "1.0.13",
+  "name": "strata-cli",
+  "version": "1.0.14",
   "description": "Author Idomoo IDM videos from compact scene JSON — tween engine, effects, masks — compiled locally, rendered to MP4 via the Idomoo API",
   "type": "module",
   "bin": {
-    "idm": "./bin/idm.mjs",
-    "idm-maker": "./bin/idm.mjs"
+    "strata": "./bin/strata.mjs"
   },
   "files": [
     "bin",
@@ -25,6 +24,7 @@
     "url": "git+https://github.com/Idomoo-RnD/vasco.git"
   },
   "keywords": [
+    "strata",
     "idomoo",
     "idm",
     "vasco",

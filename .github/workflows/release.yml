@@ -30,8 +30,8 @@ jobs:
       - run: node scripts/build-sea.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: idm_${{ matrix.target }}
-          path: dist/idm_*
+          name: strata_${{ matrix.target }}
+          path: dist/strata_*
           if-no-files-found: error
 
   release:
@@ -46,7 +46,7 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Checksums
-        run: cd dist && sha256sum idm_* > checksums.txt && cat checksums.txt
+        run: cd dist && sha256sum strata_* > checksums.txt && cat checksums.txt
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*

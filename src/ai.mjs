@@ -119,7 +119,7 @@ export async function animateImage({ imageUrl, prompt, duration = 5, ratio, mode
 // ---- Audio (TTS): POST /audio/narrate (sync) ------------------------------
 export async function narrate({ text, voiceId, modelId, normalize },
     { accountId, secret, base = AI_BASE, authBase, log = () => {} }) {
-    if (!voiceId) throw new Error('narrate needs a voice_id (see `idm generate voices`)');
+    if (!voiceId) throw new Error('narrate needs a voice_id (see `strata generate voices`)');
     const H = await aiHeaders(accountId, secret, authBase);
     const payload = { text, voice_id: voiceId };
     if (modelId) payload.model_id = modelId;

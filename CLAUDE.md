@@ -1,3 +1,3 @@
-# IDM CLI
+# Strata CLI
 
 @AGENTS.md

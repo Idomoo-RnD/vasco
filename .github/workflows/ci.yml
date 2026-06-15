@@ -18,7 +18,7 @@ jobs:
       - run: npm install
       - run: npm test
       - name: CLI smoke via bin
-        run: node bin/idm.mjs compile examples/demo.json -o demo_ci.idm --json
+        run: node bin/strata.mjs compile examples/demo.json -o demo_ci.idm --json
   sea-build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -33,4 +33,4 @@ jobs:
       - run: node scripts/build-sea.mjs
       - name: Binary smoke
         shell: bash
-        run: ./dist/idm_* version && ./dist/idm_* compile examples/demo.json -o sea_ci.idm --json
+        run: ./dist/strata_* version && ./dist/strata_* compile examples/demo.json -o sea_ci.idm --json

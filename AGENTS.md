@@ -1,4 +1,4 @@
-# IDM CLI — agent/developer guide
+# Strata CLI — agent/developer guide
 
 Node ≥ 18, ESM, zero build step. The CLI compiles a compact scene JSON into VASCO
 (Idomoo's project format), encodes it to a binary `.idm` with the bundled `vasco`
@@ -6,7 +6,7 @@ codec, and optionally renders an MP4 via the Idomoo API.
 
 ## Layout
 
-- `bin/idm.mjs` — command dispatch, flags, exit codes. Keep agent conventions intact:
+- `bin/strata.mjs` — command dispatch, flags, exit codes. Keep agent conventions intact:
   `--json` on stdout, errors on stderr, exit codes 0/1/2/3/4.
 - `src/compile.mjs` — scene → VASCO. Sugar is translated; unknown keys pass through
   verbatim so the full VASCO surface stays reachable. Whitelist-style: when adding
@@ -22,10 +22,11 @@ codec, and optionally renders an MP4 via the Idomoo API.
   an empty `errors: []` is NOT an error), then `POST /scenes/generate` with a
   MINIMAL scene object `{scene_id, media, text, audio}` (extra export metadata gets
   rejected, sometimes with a misleading authorization error).
-- `src/auth.mjs` — credential resolution: flags > env > `~/.idm/credentials`.
+- `src/auth.mjs` — credential resolution: flags > env > `~/.strata/credentials`
+  (falls back to the legacy `~/.idm/credentials` when present).
 - `vendor/vasco-*.tgz` — the codec, trimmed to its runtime dep (`xxhashjs`). Bundled
   as a file dependency; no registry needed.
-- `skills/idm-cli/` — the agent skill (installed by `idm skill install`): CLI usage,
+- `skills/strata-cli/` — the agent skill (installed by `strata skill install`): CLI usage,
   asset generation, and the scene-authoring guide + `references/`. Update it whenever
   CLI commands or scene-format behavior change.
 - `schema/vasco.schema.json` — reference copy of the VASCO schema (the live one is
@@ -46,15 +47,15 @@ codec, and optionally renders an MP4 via the Idomoo API.
 Distribution is **standalone binaries** (Node SEA), built per platform by
 `.github/workflows/release.yml` on tag push (`git tag v1.x.y && git push --tags`)
 and attached to GitHub releases with a `checksums.txt`. `scripts/install.sh` /
-`install.ps1` download + verify + install them; `idm update` self-replaces the
-running binary from the latest release, then refreshes the `idm-cli` skill in
+`install.ps1` download + verify + install them; `strata update` self-replaces the
+running binary from the latest release, then refreshes the `strata-cli` skill in
 every agent dir that already has it (claude/codex/cursor/antigravity), migrating
-any legacy `idm-maker` copy. Skill load/write/refresh is shared between `skill
-install` and `update` via the `loadSkillContents`/`refreshInstalledSkills`
-helpers in `bin/idm.mjs`.
+any legacy `idm-cli`/`idm-maker` copy. Skill load/write/refresh is shared between
+`skill install` and `update` via the `loadSkillContents`/`refreshInstalledSkills`
+helpers in `bin/strata.mjs`.
 
 `scripts/build-sea.mjs` builds locally for the current platform: esbuild bundles
-`bin/idm.mjs` into one CJS file, `node --experimental-sea-config` makes the blob,
+`bin/strata.mjs` into one CJS file, `node --experimental-sea-config` makes the blob,
 postject injects it into a copy of the node binary (fuse sentinel
 `NODE_SEA_FUSE_<hash>` — note: NOT `NODE_SEA_BLOB_FUSE`). Everything in `bin/`
 must stay statically importable: no `import.meta.url` paths, no package.json
@@ -65,9 +66,9 @@ reads, no dynamic `import()` with computed paths. Version lives in
 
 ```bash
 npm test                    # test/smoke.mjs — compile examples, encode, decode, assert round-trip
-node scripts/build-sea.mjs  # then: ./dist/idm_<os>_<arch> compile examples/demo.json
+node scripts/build-sea.mjs  # then: ./dist/strata_<os>_<arch> compile examples/demo.json
 ```
 
 No network or credentials needed. CI runs the smoke test on Node 18/20/22,
-ubuntu + windows. For a live check: `idm auth status`, then render
+ubuntu + windows. For a live check: `strata auth status`, then render
 `examples/demo.json` into a scratch library.

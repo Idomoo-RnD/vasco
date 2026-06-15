@@ -154,14 +154,14 @@ async function startRender(base, H, sceneJson, sceneId, outHeight, quality, post
 
 export async function renderIdm({ idmBytes, filename, accountId, secret, base = DEFAULT_BASE,
     libraryName, outHeight, quality = 26, posterTime = 1, log = () => {} }) {
-    if (!libraryName) throw new Error('libraryName is required — pick one with `idm library list` or name a new one');
+    if (!libraryName) throw new Error('libraryName is required — pick one with `strata library list` or name a new one');
     log('Authenticating with Idomoo...');
     const token = await getToken(base, accountId, secret);
     const H = { Accept: 'application/json', Authorization: `Bearer ${token}` };
 
     const { id: libraryId, created } = await getOrCreateLibrary(base, H, libraryName);
     log(created
-        ? `Created NEW library ${libraryId} — to avoid duplicates, reuse it on every later render with --library ${libraryId} (or pre-create one with \`idm library create\`)`
+        ? `Created NEW library ${libraryId} — to avoid duplicates, reuse it on every later render with --library ${libraryId} (or pre-create one with \`strata library create\`)`
         : `Reusing library ${libraryId}`);
     const { sceneJson, sceneId } = await uploadAndExport(base, H, libraryId, filename, idmBytes, log);
 

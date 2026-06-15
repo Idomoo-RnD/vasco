@@ -1,9 +1,9 @@
-// Builds a standalone `idm` executable for the current platform using Node SEA:
-//   1. esbuild bundles bin/idm.mjs (+ vasco codec, ajv) into one CJS file
+// Builds a standalone `strata` executable for the current platform using Node SEA:
+//   1. esbuild bundles bin/strata.mjs (+ vasco codec, ajv) into one CJS file
 //   2. node --experimental-sea-config generates the SEA blob
 //   3. the blob is injected (postject) into a copy of the running node binary
 //
-// Output: dist/idm_<os>_<arch>[.exe]   (e.g. dist/idm_linux_amd64, dist/idm_windows_amd64.exe)
+// Output: dist/strata_<os>_<arch>[.exe]   (e.g. dist/strata_linux_amd64, dist/strata_windows_amd64.exe)
 
 import { execSync } from 'child_process';
 import { mkdirSync, rmSync, copyFileSync, writeFileSync, statSync } from 'fs';
@@ -20,7 +20,7 @@ if (!osName || !archName) {
     process.exit(1);
 }
 const ext = process.platform === 'win32' ? '.exe' : '';
-const outBin = join('dist', `idm_${osName}_${archName}${ext}`);
+const outBin = join('dist', `strata_${osName}_${archName}${ext}`);
 
 const run = (cmd) => {
     console.log(`$ ${cmd}`);
@@ -32,11 +32,11 @@ mkdirSync('build', { recursive: true });
 mkdirSync('dist', { recursive: true });
 
 // 1. bundle
-run('npx esbuild bin/idm.mjs --bundle --platform=node --format=cjs --outfile=build/idm.cjs --log-level=warning');
+run('npx esbuild bin/strata.mjs --bundle --platform=node --format=cjs --outfile=build/strata.cjs --log-level=warning');
 
 // 2. SEA blob
 writeFileSync('build/sea-config.json', JSON.stringify({
-    main: 'build/idm.cjs',
+    main: 'build/strata.cjs',
     output: 'build/sea.blob',
     disableExperimentalSEAWarning: true,
 }, null, 2));

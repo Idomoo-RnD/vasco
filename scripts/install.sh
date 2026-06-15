@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# IDM CLI installer — downloads the standalone binary for this platform from
+# Strata CLI installer — downloads the standalone binary for this platform from
 # GitHub releases, verifies its checksum, installs to ~/.local/bin, and installs
-# the idm-cli agent skill.
+# the strata-cli agent skill.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash
 #
 # Options (env vars):
 #   INSTALL_DIR   target directory (default ~/.local/bin)
-#   IDM_VERSION   tag to install, e.g. v1.0.0 (default: latest)
-#   IDM_SKILL     claude | codex | both | skip | auto  (default: ask when on a TTY, else auto)
+#   STRATA_VERSION   tag to install, e.g. v1.0.0 (default: latest)
+#   STRATA_SKILL     claude | codex | both | skip | auto  (default: ask when on a TTY, else auto)
 
 set -euo pipefail
 
 REPO="Idomoo-RnD/vasco"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
-VERSION="${IDM_VERSION:-latest}"
+VERSION="${STRATA_VERSION:-latest}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -53,7 +53,7 @@ fetch() {
 
 OS="$(detect_os)"
 ARCH="$(detect_arch)"
-ASSET="idm_${OS}_${ARCH}"
+ASSET="strata_${OS}_${ARCH}"
 
 if [ "$VERSION" = "latest" ]; then
   BASE="https://github.com/$REPO/releases/latest/download"
@@ -70,21 +70,21 @@ fetch "$BASE/checksums.txt" "$TMP/checksums.txt"
 log "Checksum OK."
 
 mkdir -p "$INSTALL_DIR"
-install -m 755 "$TMP/$ASSET" "$INSTALL_DIR/idm"
-log "Installed $INSTALL_DIR/idm ($("$INSTALL_DIR/idm" version))"
+install -m 755 "$TMP/$ASSET" "$INSTALL_DIR/strata"
+log "Installed $INSTALL_DIR/strata ($("$INSTALL_DIR/strata" version))"
 
 # --- agent skill -------------------------------------------------------------
 # When piped through `curl | bash`, stdin is the script — prompt via /dev/tty.
-SKILL_CHOICE="${IDM_SKILL:-}"
+SKILL_CHOICE="${STRATA_SKILL:-}"
 if [ -z "$SKILL_CHOICE" ]; then
   if [ -r /dev/tty ] && [ -w /dev/tty ]; then
     log ""
-    log "Install the idm-cli agent skill? (multiple allowed, e.g. 1,3)"
+    log "Install the strata-cli agent skill? (multiple allowed, e.g. 1,3)"
     log "  1) Claude Code    (~/.claude/skills)"
     log "  2) OpenAI Codex   (~/.codex/skills)"
     log "  3) Cursor         (~/.cursor/skills + project .cursor/skills)"
     log "  4) Antigravity    (IDE ~/.agents/skills + CLI ~/.gemini/antigravity-cli/skills)"
-    log "  5) Claude Cowork  (packages idm-cli-skill.zip to upload in the app)"
+    log "  5) Claude Cowork  (packages strata-cli-skill.zip to upload in the app)"
     log "  6) All of the above"
     log "  7) Skip"
     printf 'Choice [1]: ' > /dev/tty
@@ -108,12 +108,12 @@ if [ "$FLAGS" != "skip" ]; then
 fi
 
 if [ "$FLAGS" = "skip" ]; then
-  log "Skipped skill install (rerun anytime with: idm skill install)"
+  log "Skipped skill install (rerun anytime with: strata skill install)"
 elif [ -n "$FLAGS" ]; then
   # shellcheck disable=SC2086
-  "$INSTALL_DIR/idm" skill install $FLAGS || log "(skill install skipped — rerun with: idm skill install$FLAGS)"
+  "$INSTALL_DIR/strata" skill install $FLAGS || log "(skill install skipped — rerun with: strata skill install$FLAGS)"
 else
-  "$INSTALL_DIR/idm" skill install || log "(skill install skipped — rerun with: idm skill install)"
+  "$INSTALL_DIR/strata" skill install || log "(skill install skipped — rerun with: strata skill install)"
 fi
 
 case ":$PATH:" in
@@ -124,6 +124,6 @@ esac
 
 log ""
 log "Next steps:"
-log "  idm init scene.json        # starter scene"
-log "  idm compile scene.json     # compile locally"
-log "  idm auth login             # add Idomoo credentials to render MP4s"
+log "  strata init scene.json        # starter scene"
+log "  strata compile scene.json     # compile locally"
+log "  strata auth login             # add Idomoo credentials to render MP4s"

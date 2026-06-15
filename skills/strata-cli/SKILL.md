@@ -1,56 +1,56 @@
 ---
-name: idm-cli
-description: Author Idomoo IDM videos with the `idm` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+name: strata-cli
+description: Author Idomoo IDM videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
 ---
 
-# IDM CLI — author, generate assets, compile & render IDM videos
+# Strata CLI — author, generate assets, compile & render IDM videos
 
-Drive the `idm` CLI end to end: turn a short "scene" JSON into a full VASCO project, generate any missing media (image / image-to-video / narration / music), compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
+Drive the `strata` CLI end to end: turn a short "scene" JSON into a full VASCO project, generate any missing media (image / image-to-video / narration / music), compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
 
 ## Setup — check BEFORE installing anything
 
-The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaScript runtime — **never install Node.js, npm, or any other runtime for it**.
+The `strata` CLI is a **standalone self-contained binary**. It embeds its own JavaScript runtime — **never install Node.js, npm, or any other runtime for it**.
 
-1. **Check it first**: run `idm version`. If it prints a version, the CLI is ready — skip all setup. Also try `~/.local/bin/idm version` (Linux/macOS) and `%LOCALAPPDATA%\Programs\idm\idm.exe version` (Windows) in case it is installed but not on PATH.
+1. **Check it first**: run `strata version`. If it prints a version, the CLI is ready — skip all setup. Also try `~/.local/bin/strata version` (Linux/macOS) and `%LOCALAPPDATA%\Programs\strata\strata.exe version` (Windows) in case it is installed but not on PATH.
 2. **Only if missing**, install the binary:
-   - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (in sandboxes/agents set `IDM_SKILL=skip` to suppress the interactive skill prompt)
+   - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (in sandboxes/agents set `STRATA_SKILL=skip` to suppress the interactive skill prompt)
    - Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`
-   - Or download the platform binary directly from https://github.com/Idomoo-RnD/vasco/releases/latest (`idm_linux_amd64`, `idm_linux_arm64`, `idm_darwin_arm64`, `idm_darwin_amd64`, `idm_windows_amd64.exe`), `chmod +x` it, and run it by path — no further setup.
+   - Or download the platform binary directly from https://github.com/Idomoo-RnD/vasco/releases/latest (`strata_linux_amd64`, `strata_linux_arm64`, `strata_darwin_arm64`, `strata_darwin_amd64`, `strata_windows_amd64.exe`), `chmod +x` it, and run it by path — no further setup.
 3. **Test it works** (offline, no assets/credentials needed — exit 0 means the toolchain is good):
 
    ```bash
-   idm version
+   strata version
    echo '{"width":1280,"height":720,"fps":25,"duration":1,"layers":[{"type":"solid","color":"#102040"}]}' > /tmp/t.json
-   idm validate /tmp/t.json
+   strata validate /tmp/t.json
    ```
 
 ## 🎨 The CLI generates assets — don't make the user supply everything
 
-The `idm` CLI can **create the media an IDM needs** via the Idomoo AI API (needs auth; saves files to a folder, default `./idm_assets/`). Do not assume the user must hand you every image/clip/voiceover:
+The `strata` CLI can **create the media an IDM needs** via the Idomoo AI API (needs auth; saves files to a folder, default `./strata_assets/`). Do not assume the user must hand you every image/clip/voiceover:
 
 | command | makes |
 |---|---|
-| `idm generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>]` | a still PNG (async) |
-| `idm generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** MP4 clip from a still (async) |
-| `idm generate narration "<text>" --voice <voice_id>` | a TTS voiceover MP3 (`idm generate voices` lists voice IDs) |
-| `idm generate music "<prompt>" [--duration 30]` | an instrumental soundtrack |
+| `strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>]` | a still PNG (async) |
+| `strata generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** MP4 clip from a still (async) |
+| `strata generate narration "<text>" --voice <voice_id>` | a TTS voiceover MP3 (`strata generate voices` lists voice IDs) |
+| `strata generate music "<prompt>" [--duration 30]` | an instrumental soundtrack |
 
 Typical chain: **image → animate it into video → add narration + music**, then point the scene's `src` at the saved local files. Full params/output in the *Generating assets* section of [references/format.md](references/format.md).
 
 ## Workflow
 
-1. **ASK ABOUT ASSETS FIRST — this is a required gate, do not skip it.** Before writing any scene, ask the user, for each kind of media the video needs (images, video clips, audio/music): *do they already have a file, or should I generate it with `idm generate`?* Collect file paths for anything they have; plan a `generate` call for anything they don't. Only skip the question when the user already specified every asset or explicitly told you to generate/use placeholders. Text layers REQUIRE a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
+1. **ASK ABOUT ASSETS FIRST — this is a required gate, do not skip it.** Before writing any scene, ask the user, for each kind of media the video needs (images, video clips, audio/music): *do they already have a file, or should I generate it with `strata generate`?* Collect file paths for anything they have; plan a `generate` call for anything they don't. Only skip the question when the user already specified every asset or explicitly told you to generate/use placeholders. Text layers REQUIRE a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
 2. Understand what video the user wants (size, duration, layers, motion).
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
-4. Compile: `idm compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
-5. To render an MP4: `idm render scene.json --library "<saved-lib-id>" -o out.mp4`.
-   - **Credentials**: ask the user for their **account ID** and **secret key** if `idm auth status` fails. Set them via `idm auth login --account <id> --token <secret>`, or env `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`.
+4. Compile: `strata compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
+5. To render an MP4: `strata render scene.json --library "<saved-lib-id>" -o out.mp4`.
+   - **Credentials**: ask the user for their **account ID** and **secret key** if `strata auth status` fails. Set them via `strata auth login --account <id> --token <secret>`, or env `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`.
    - **Library — pick ONE and reuse it (do NOT create a new library per IDM).** Every render in a project/session must upload to the **same** library. Creating a fresh library for each upload scatters renders across many libraries and is bad practice.
-     - **First render only — create the library explicitly, up front.** Ask the user **once** which library to use (show existing ones with `idm library list`), then create/resolve it with **`idm library create "<name>"`**. This prints the library **id** and is idempotent — it reuses the id if a library with that name/id already exists, so it never duplicates. **Save that id** for the whole session and persist it for the project (note it in your memory, or write a small `.idm-library` file next to the scenes). Do **not** rely on `render` to mint the library.
+     - **First render only — create the library explicitly, up front.** Ask the user **once** which library to use (show existing ones with `strata library list`), then create/resolve it with **`strata library create "<name>"`**. This prints the library **id** and is idempotent — it reuses the id if a library with that name/id already exists, so it never duplicates. **Save that id** for the whole session and persist it for the project (note it in your memory, or write a small `.idm-library` file next to the scenes). Do **not** rely on `render` to mint the library.
      - **Every later render**: pass that **same** `--library <saved-id>` (the **id**, not a name) **without asking again**. `render` matches the id exactly and logs `Reusing library <id>`; if it ever logs `Created NEW library <id>` you passed the wrong value. Only switch libraries when the **user explicitly says so**.
      - Without `--library`, a non-interactive render fails with the library list in the error.
    - A render takes minutes (upload → export → render, polled); run it in the background and report the printed video/poster URLs.
-6. To debug, use `--vasco` (dumps compiled VASCO JSON) or `idm inspect out.idm` (decode a binary back).
+6. To debug, use `--vasco` (dumps compiled VASCO JSON) or `strata inspect out.idm` (decode a binary back).
 
 Commands (a bare `.json` arg implies `compile`, a bare `.idm` implies `inspect`):
 `compile <scene.json> [-o out.idm] [--vasco]` · `validate <scene.json> [--print]` · `inspect <file.idm> [--assets <dir>]` · `generate image|video|narration|music|voices ...` · `render <scene.json|.idm> --library <id> [-o out.mp4] [--height] [--quality]` · `library list|create <name>` · `init [scene.json]` · `auth login|status` · `schema` · `update`. Add `--json` for machine-readable output. Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
@@ -92,7 +92,7 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 
 ## Rules of thumb
 
-- Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Asset files must exist at compile time. A bundled free font ships with the repo at `examples/assets/DejaVuSans.ttf` (`idm schema` prints the full VASCO schema if you need an exotic property).
+- Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Asset files must exist at compile time. A bundled free font ships with the repo at `examples/assets/DejaVuSans.ttf` (`strata schema` prints the full VASCO schema if you need an exotic property).
 - **`anchor` + `position` — the #1 transform bug. Read this before animating position on an anchored layer.** `anchor` is the pivot for scale/rotation (comp coords), and `position` is the absolute comp point where that pivot **lands** — it is *not* an offset once an anchor is set. `position` **defaults to the anchor**, so set *only* `anchor` (the layer's center) and the layer scales/rotates in place. The trap: setting an anchor and then animating `position` to `[0,0]` (offset-style) snaps the pivot to the top-left corner and yanks the whole layer up there. To scale/rotate in place **and** move (rise/slide), write every position keyframe as **anchor + offset**, and make the *resting* keyframe equal the anchor:
   - ❌ `"anchor":[960,540]` with `"position":[[0,40]→[0,0]]` → flies to the top-left.
   - ✅ `"anchor":[960,540]` with `"position":[[960,580]→[960,540]]` → rises 40px into place, centered.

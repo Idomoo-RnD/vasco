@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// idm — author Idomoo IDM videos from compact scene JSON, compile locally, render to MP4.
+// strata — author Idomoo IDM videos from compact scene JSON, compile locally, render to MP4.
 //
 // Ships as a standalone binary (Node SEA): everything is statically imported so
 // esbuild can bundle a single CJS file — no package.json reads, no dynamic paths.
@@ -27,7 +27,7 @@ import { VERSION, REPO, RAW } from '../src/version.mjs';
 
 const args = process.argv.slice(2);
 
-// `idm scene.json` / `idm file.idm` — a bare file arg implies the command.
+// `strata scene.json` / `strata file.idm` — a bare file arg implies the command.
 const COMMANDS = ['compile', 'build', 'validate', 'inspect', 'init', 'render',
     'auth', 'library', 'generate', 'schema', 'skill', 'update', 'help', 'version'];
 if (args[0] && !COMMANDS.includes(args[0]) && !args[0].startsWith('-')) {
@@ -106,7 +106,7 @@ function printSummary(doc) {
 function getCreds() {
     const creds = resolveCredentials({ account: opt('--account'), token: opt('--token') });
     if (!creds)
-        fail('No Idomoo credentials. Run `idm auth login`, set IDOMOO_ACCOUNT_ID / IDOMOO_SECRET_KEY, or pass --account/--token.', 3);
+        fail('No Idomoo credentials. Run `strata auth login`, set IDOMOO_ACCOUNT_ID / IDOMOO_SECRET_KEY, or pass --account/--token.', 3);
     return creds;
 }
 
@@ -124,7 +124,7 @@ function platformAsset() {
     const os = { win32: 'windows', darwin: 'darwin', linux: 'linux' }[process.platform];
     const arch = { x64: 'amd64', arm64: 'arm64' }[process.arch];
     if (!os || !arch) return null;
-    return `idm_${os}_${arch}${process.platform === 'win32' ? '.exe' : ''}`;
+    return `strata_${os}_${arch}${process.platform === 'win32' ? '.exe' : ''}`;
 }
 
 async function isSeaBinary() {
@@ -136,11 +136,11 @@ async function isSeaBinary() {
     }
 }
 
-// ---- Agent skill (idm-cli) install/refresh -------------------------------
+// ---- Agent skill (strata-cli) install/refresh -------------------------------
 // The skill ships the same SKILL.md + references everywhere; only the target
-// dir differs per agent. `idm-maker` is the legacy name — migrate it on touch.
-const SKILL_NAME = 'idm-cli';
-const LEGACY_SKILL_NAMES = ['idm-maker'];
+// dir differs per agent. `idm-cli`/`idm-maker` are legacy names — migrate on touch.
+const SKILL_NAME = 'strata-cli';
+const LEGACY_SKILL_NAMES = ['idm-cli', 'idm-maker'];
 const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/motion-design.md', 'references/recipes.md'];
 
 // Load the skill files: prefer the repo checkout (dev — instant, offline), else
@@ -215,7 +215,7 @@ async function main() {
         case 'compile':
         case 'build': {
             const scenePath = args[1];
-            if (!scenePath) fail('Usage: idm compile <scene.json> [-o out.idm] [--vasco] [--json]');
+            if (!scenePath) fail('Usage: strata compile <scene.json> [-o out.idm] [--vasco] [--json]');
             const { doc, abs } = loadAndCompile(scenePath);
             const outPath = resolve(opt('-o', opt('--out', abs.replace(/\.json$/i, '') + '.idm')));
             mkdirSync(dirname(outPath), { recursive: true });
@@ -226,14 +226,14 @@ async function main() {
             } catch (e) {
                 fail(`vasco2idm failed: ${e?.message ?? e}`);
             }
-            if (JSON_MODE) out({ ok: true, idm_path: outPath, ...summary(doc) });
+            if (JSON_MODE) out({ ok: true, strata_path: outPath, ...summary(doc) });
             else { console.log(`✅ wrote ${outPath}`); printSummary(doc); }
             break;
         }
 
         case 'validate': {
             const scenePath = args[1];
-            if (!scenePath) fail('Usage: idm validate <scene.json> [--print] [--json]');
+            if (!scenePath) fail('Usage: strata validate <scene.json> [--print] [--json]');
             const { doc } = loadAndCompile(scenePath);
             if (flag('--print')) console.log(JSON.stringify(doc, null, 2));
             if (JSON_MODE) out({ ok: true, valid: true, ...summary(doc) });
@@ -243,7 +243,7 @@ async function main() {
 
         case 'inspect': {
             const idmPath = args[1];
-            if (!idmPath) fail('Usage: idm inspect <file.idm> [--assets <dir>]');
+            if (!idmPath) fail('Usage: strata inspect <file.idm> [--assets <dir>]');
             let buffer;
             try {
                 buffer = readFileSync(resolve(idmPath));
@@ -266,7 +266,7 @@ async function main() {
 
         case 'render': {
             const input = args[1];
-            if (!input) fail(`Usage: idm render <scene.json|file.idm> --library <name-or-id> [-o out.mp4]
+            if (!input) fail(`Usage: strata render <scene.json|file.idm> --library <name-or-id> [-o out.mp4]
                   [--height <px>] [--quality <n>] [--base <api url>] [--account <id>] [--token <secret>] [--json]`);
             const creds = getCreds();
 
@@ -368,7 +368,7 @@ async function main() {
             }
             if (sub === 'status') {
                 const creds = resolveCredentials({ account: opt('--account'), token: opt('--token') });
-                if (!creds) fail(`Not authenticated. Run \`idm auth login\` or set IDOMOO_ACCOUNT_ID / IDOMOO_SECRET_KEY. (checked env, ${CRED_PATH})`, 3);
+                if (!creds) fail(`Not authenticated. Run \`strata auth login\` or set IDOMOO_ACCOUNT_ID / IDOMOO_SECRET_KEY. (checked env, ${CRED_PATH})`, 3);
                 try {
                     await getToken(apiBase(), creds.account_id, creds.secret_key);
                 } catch (e) {
@@ -378,31 +378,31 @@ async function main() {
                     `✅ authenticated as account ${creds.account_id} (credentials from ${creds.source})`);
                 break;
             }
-            fail('Usage: idm auth login [--account <id> --token <secret>] | idm auth status');
+            fail('Usage: strata auth login [--account <id> --token <secret>] | strata auth status');
             break;
         }
 
         case 'library': {
             const sub = args[1];
             if (sub !== 'list' && sub !== 'create')
-                fail('Usage: idm library list [--json]  |  idm library create <name> [--json]');
+                fail('Usage: strata library list [--json]  |  strata library create <name> [--json]');
             const creds = getCreds();
             const H = await bearerHeaders(creds);
             try {
                 if (sub === 'list') {
                     const libs = await listLibraries(apiBase(), H);
                     if (JSON_MODE) out({ ok: true, libraries: libs });
-                    else if (libs.length === 0) console.log('No libraries yet — create one with `idm library create <name>`.');
+                    else if (libs.length === 0) console.log('No libraries yet — create one with `strata library create <name>`.');
                     else for (const l of libs) console.log(`${l.id}\t${l.name}`);
                 } else { // create — idempotent: reuse an existing id/name match, never duplicate
                     const name = args[2];
-                    if (!name) fail('Usage: idm library create <name> [--json]');
+                    if (!name) fail('Usage: strata library create <name> [--json]');
                     const want = String(name).trim(), wantLc = want.toLowerCase();
                     const libs = await listLibraries(apiBase(), H);
                     const hit = libs.find(l => l.id === want || String(l.name).trim().toLowerCase() === wantLc);
                     const id = hit ? hit.id : await createLibrary(apiBase(), H, want);
                     if (JSON_MODE) out({ ok: true, library_id: id, name: want, reused: Boolean(hit) });
-                    else console.log(`${hit ? '♻️  reusing existing' : '✅ created'} library ${id}  (${want})\n   reuse it on every render:  idm render scene.json --library ${id}`);
+                    else console.log(`${hit ? '♻️  reusing existing' : '✅ created'} library ${id}  (${want})\n   reuse it on every render:  strata render scene.json --library ${id}`);
                 }
             } catch (e) {
                 fail(e.message, 3);
@@ -414,23 +414,23 @@ async function main() {
             const sub = args[1];
             const SUBS = ['image', 'video', 'narration', 'music', 'voices'];
             if (!SUBS.includes(sub))
-                fail(`Usage: idm generate <image|video|narration|music|voices> ...
-  idm generate voices [--search <text>] [--json]
-  idm generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>] [-o file | --out-dir dir]
-  idm generate video <image-url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
-  idm generate narration "<text>" --voice <voice_id> [-o file | --out-dir dir]
-  idm generate music "<prompt>" [--duration 30] [-o file | --out-dir dir]`);
+                fail(`Usage: strata generate <image|video|narration|music|voices> ...
+  strata generate voices [--search <text>] [--json]
+  strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>] [-o file | --out-dir dir]
+  strata generate video <image-url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
+  strata generate narration "<text>" --voice <voice_id> [-o file | --out-dir dir]
+  strata generate music "<prompt>" [--duration 30] [-o file | --out-dir dir]`);
 
             const creds = getCreds();
             const ctx = { accountId: creds.account_id, secret: creds.secret_key, authBase: apiBase(),
                 log: m => { if (!JSON_MODE) console.log('  ' + m); } };
 
             // download an asset url into the chosen folder; -o overrides path,
-            // else --out-dir (default ./idm_assets) + the url's basename.
+            // else --out-dir (default ./strata_assets) + the url's basename.
             const saveAsset = async (url, fallbackName) => {
                 let outPath = opt('-o', opt('--out'));
                 if (!outPath) {
-                    const dir = resolve(opt('--out-dir', 'idm_assets'));
+                    const dir = resolve(opt('--out-dir', 'strata_assets'));
                     let name = basename(new URL(url).pathname) || fallbackName;
                     if (!/\.[a-z0-9]+$/i.test(name)) name = fallbackName;
                     outPath = join(dir, name);
@@ -458,7 +458,7 @@ async function main() {
             try {
                 if (sub === 'image') {
                     const prompt = args[2];
-                    if (!prompt || prompt.startsWith('-')) fail('Usage: idm generate image "<prompt>" [--aspect 9:16] ...');
+                    if (!prompt || prompt.startsWith('-')) fail('Usage: strata generate image "<prompt>" [--aspect 9:16] ...');
                     const url = await generateImage({
                         prompt, aspect: opt('--aspect', '1:1'), colors: opt('--colors'),
                         referenceImage: opt('--reference'),
@@ -467,7 +467,7 @@ async function main() {
                     out({ ok: true, type: 'image', path, url }, `✅ saved ${path}\n   url: ${url}`);
                 } else if (sub === 'video') {
                     const imageUrl = args[2];
-                    if (!imageUrl || imageUrl.startsWith('-')) fail('Usage: idm generate video <image-url> [--prompt "..."] [--duration 5] ...');
+                    if (!imageUrl || imageUrl.startsWith('-')) fail('Usage: strata generate video <image-url> [--prompt "..."] [--duration 5] ...');
                     const url = await animateImage({
                         imageUrl, prompt: opt('--prompt'),
                         duration: Number(opt('--duration', '5')), ratio: opt('--ratio'),
@@ -476,16 +476,16 @@ async function main() {
                     out({ ok: true, type: 'video', path, url }, `✅ saved ${path}\n   url: ${url}`);
                 } else if (sub === 'narration') {
                     const text = args[2];
-                    if (!text || text.startsWith('-')) fail('Usage: idm generate narration "<text>" --voice <voice_id> ...');
+                    if (!text || text.startsWith('-')) fail('Usage: strata generate narration "<text>" --voice <voice_id> ...');
                     const voiceId = opt('--voice', opt('--voice-id'));
-                    if (!voiceId) fail('narration needs --voice <voice_id> — list options with `idm generate voices`', 1);
+                    if (!voiceId) fail('narration needs --voice <voice_id> — list options with `strata generate voices`', 1);
                     const { url, duration } = await narrate({ text, voiceId, normalize: opt('--normalize') }, ctx);
                     const path = await saveAsset(url, 'narration.mp3');
                     out({ ok: true, type: 'narration', path, url, duration },
                         `✅ saved ${path} (${duration}s)\n   url: ${url}`);
                 } else if (sub === 'music') {
                     const prompt = args[2];
-                    if (!prompt || prompt.startsWith('-')) fail('Usage: idm generate music "<prompt>" [--duration 30] ...');
+                    if (!prompt || prompt.startsWith('-')) fail('Usage: strata generate music "<prompt>" [--duration 30] ...');
                     const url = await generateMusic({ prompt, duration: Number(opt('--duration', '30')) }, ctx);
                     const path = await saveAsset(url, 'music.mp3');
                     out({ ok: true, type: 'music', path, url }, `✅ saved ${path}\n   url: ${url}`);
@@ -504,7 +504,7 @@ async function main() {
 
         case 'skill': {
             if (args[1] !== 'install')
-                fail('Usage: idm skill install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]   (agent skill dirs, or a ZIP for Claude Cowork)');
+                fail('Usage: strata skill install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]   (agent skill dirs, or a ZIP for Claude Cowork)');
             // Same SKILL.md format everywhere: Claude Code reads ~/.claude/skills,
             // OpenAI Codex ~/.codex/skills, Cursor ~/.cursor/skills, Google Antigravity
             // the IDE at ~/.agents/skills and the CLI at ~/.gemini/antigravity-cli/skills
@@ -586,12 +586,12 @@ async function main() {
                 fail(`Update failed: ${e.message}`);
             }
             // Keep skills in sync with the binary: refresh the skill in every
-            // agent dir that already has it (migrating any legacy idm-maker copy).
+            // agent dir that already has it (migrating any legacy idm-cli/idm-maker copy).
             // Best-effort — a skill-refresh hiccup must not fail the binary update.
             try {
                 const msgs = refreshInstalledSkills(await loadSkillContents());
                 if (msgs.length) { console.log('Refreshing installed skills:'); for (const m of msgs) console.log(m); }
-                else console.log('No installed skills to refresh (install with: idm skill install).');
+                else console.log('No installed skills to refresh (install with: strata skill install).');
             } catch (e) {
                 console.error(`⚠ skill refresh skipped: ${e.message}`);
             }
@@ -617,7 +617,7 @@ async function main() {
                 ],
             };
             writeFileSync(outPath, JSON.stringify(starter, null, 2));
-            console.log(`✅ wrote ${outPath} — point "font" at a real .ttf, then: idm compile ${args[1] ?? 'scene.json'}`);
+            console.log(`✅ wrote ${outPath} — point "font" at a real .ttf, then: strata compile ${args[1] ?? 'scene.json'}`);
             break;
         }
 
@@ -633,41 +633,41 @@ async function main() {
 ██ ██▀██ ██▀██ ██▀▄▀██ ██▀██ ██▀██   ██▄██ ██▀██ ███▄▄ ██▀▀▀ ██▀██
 ██ ████▀ ▀███▀ ██   ██ ▀███▀ ▀███▀    ▀█▀  ██▀██ ▄▄██▀ ▀████ ▀███▀
 
-idm v${VERSION} — author Idomoo IDM videos from compact scene JSON, locally
+strata v${VERSION} — author Idomoo IDM videos from compact scene JSON, locally
 
 Usage:
-  idm <scene.json>                                   shorthand for compile
-  idm <file.idm>                                     shorthand for inspect
-  idm compile  <scene.json> [-o out.idm] [--vasco]   scene -> .idm (schema-validated)
-  idm validate <scene.json> [--print]                compile + schema-check, no output file
-  idm inspect  <file.idm>   [--assets <dir>]         decode .idm back to vasco JSON
-  idm render   <scene.json|file.idm> --library <name-or-id> [-o out.mp4]
+  strata <scene.json>                                   shorthand for compile
+  strata <file.idm>                                     shorthand for inspect
+  strata compile  <scene.json> [-o out.idm] [--vasco]   scene -> .idm (schema-validated)
+  strata validate <scene.json> [--print]                compile + schema-check, no output file
+  strata inspect  <file.idm>   [--assets <dir>]         decode .idm back to vasco JSON
+  strata render   <scene.json|file.idm> --library <name-or-id> [-o out.mp4]
                [--height <px>] [--quality <n>] [--base <url>]
                                                      upload to Idomoo, render, download MP4
                                                      (asks which library when run interactively)
-  idm library  list                                  list Idomoo libraries (id + name)
-  idm library  create <name>                          create (or reuse) a library, print its id —
+  strata library  list                                  list Idomoo libraries (id + name)
+  strata library  create <name>                          create (or reuse) a library, print its id —
                                                        capture it once, then render --library <id>
                                                        every time so all videos share one library
-  idm generate image|video|narration|music|voices   generate IDM assets via the Idomoo AI API
-                                                     (saves files to ./idm_assets or -o; needs auth)
-  idm init     [scene.json]                          write a starter scene
-  idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
-  idm schema                                         print the VASCO JSON Schema
-  idm skill    install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]
-                                                     install the idm-cli agent skill: Claude Code
+  strata generate image|video|narration|music|voices   generate IDM assets via the Idomoo AI API
+                                                     (saves files to ./strata_assets or -o; needs auth)
+  strata init     [scene.json]                          write a starter scene
+  strata auth     login | status                        manage Idomoo credentials (~/.strata/credentials)
+  strata schema                                         print the VASCO JSON Schema
+  strata skill    install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]
+                                                     install the strata-cli agent skill: Claude Code
                                                      (~/.claude/skills), OpenAI Codex (~/.codex/skills),
                                                      Cursor (~/.cursor/skills + project .cursor/skills),
                                                      Antigravity IDE + CLI (~/.agents/skills,
                                                      ~/.gemini/antigravity-cli/skills),
                                                      or package a ZIP to upload into Claude Cowork
-  idm update                                         self-update the binary to the latest release,
-                                                     then refresh the idm-cli skill in every agent
+  strata update                                         self-update the binary to the latest release,
+                                                     then refresh the strata-cli skill in every agent
                                                      dir that already has it (claude/codex/cursor/
-                                                     antigravity; migrates legacy idm-maker)
-  idm version
+                                                     antigravity; migrates legacy strata-maker)
+  strata version
 
-Auth resolution: --account/--token > IDOMOO_ACCOUNT_ID/IDOMOO_SECRET_KEY env > ~/.idm/credentials
+Auth resolution: --account/--token > IDOMOO_ACCOUNT_ID/IDOMOO_SECRET_KEY env > ~/.strata/credentials
 Global flags: --json (machine-readable stdout)
 Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout`);
             process.exit(cmd && cmd !== 'help' ? 1 : 0);
