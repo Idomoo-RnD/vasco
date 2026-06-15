@@ -64,8 +64,8 @@ async function getOrCreateLibrary(base, H, nameOrId) {
     const wantLc = want.toLowerCase();
     const libs = await listLibraries(base, H);
     for (const it of libs)
-        if (it.id === want || String(it.name).trim().toLowerCase() === wantLc) return it.id;
-    return createLibrary(base, H, want);
+        if (it.id === want || String(it.name).trim().toLowerCase() === wantLc) return { id: it.id, created: false };
+    return { id: await createLibrary(base, H, want), created: true };
 }
 
 async function uploadAndExport(base, H, libraryId, filename, idmBytes, log) {
@@ -159,8 +159,10 @@ export async function renderIdm({ idmBytes, filename, accountId, secret, base = 
     const token = await getToken(base, accountId, secret);
     const H = { Accept: 'application/json', Authorization: `Bearer ${token}` };
 
-    const libraryId = await getOrCreateLibrary(base, H, libraryName);
-    log(`Using library ${libraryId} — reuse it on every later render with --library ${libraryId}`);
+    const { id: libraryId, created } = await getOrCreateLibrary(base, H, libraryName);
+    log(created
+        ? `Created NEW library ${libraryId} — to avoid duplicates, reuse it on every later render with --library ${libraryId} (or pre-create one with \`idm library create\`)`
+        : `Reusing library ${libraryId}`);
     const { sceneJson, sceneId } = await uploadAndExport(base, H, libraryId, filename, idmBytes, log);
 
     log('Starting render...');

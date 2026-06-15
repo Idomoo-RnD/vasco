@@ -20,7 +20,7 @@ import { vasco2idm, idm2vasco, schema } from 'vasco';
 import Ajv from 'ajv';
 import { compileScene } from '../src/compile.mjs';
 import { resolveCredentials, storeCredentials, CRED_PATH } from '../src/auth.mjs';
-import { renderIdm, download, getToken, listLibraries } from '../src/render.mjs';
+import { renderIdm, download, getToken, listLibraries, createLibrary } from '../src/render.mjs';
 import { generateImage, animateImage, narrate, generateMusic, listVoices } from '../src/ai.mjs';
 import { makeZip } from '../src/zip.mjs';
 import { VERSION, REPO, RAW } from '../src/version.mjs';
@@ -309,13 +309,27 @@ async function main() {
         }
 
         case 'library': {
-            if (args[1] !== 'list') fail('Usage: idm library list [--json]');
+            const sub = args[1];
+            if (sub !== 'list' && sub !== 'create')
+                fail('Usage: idm library list [--json]  |  idm library create <name> [--json]');
             const creds = getCreds();
+            const H = await bearerHeaders(creds);
             try {
-                const libs = await listLibraries(apiBase(), await bearerHeaders(creds));
-                if (JSON_MODE) out({ ok: true, libraries: libs });
-                else if (libs.length === 0) console.log('No libraries yet — `idm render --library <name>` will create one.');
-                else for (const l of libs) console.log(`${l.id}\t${l.name}`);
+                if (sub === 'list') {
+                    const libs = await listLibraries(apiBase(), H);
+                    if (JSON_MODE) out({ ok: true, libraries: libs });
+                    else if (libs.length === 0) console.log('No libraries yet — create one with `idm library create <name>`.');
+                    else for (const l of libs) console.log(`${l.id}\t${l.name}`);
+                } else { // create — idempotent: reuse an existing id/name match, never duplicate
+                    const name = args[2];
+                    if (!name) fail('Usage: idm library create <name> [--json]');
+                    const want = String(name).trim(), wantLc = want.toLowerCase();
+                    const libs = await listLibraries(apiBase(), H);
+                    const hit = libs.find(l => l.id === want || String(l.name).trim().toLowerCase() === wantLc);
+                    const id = hit ? hit.id : await createLibrary(apiBase(), H, want);
+                    if (JSON_MODE) out({ ok: true, library_id: id, name: want, reused: Boolean(hit) });
+                    else console.log(`${hit ? '♻️  reusing existing' : '✅ created'} library ${id}  (${want})\n   reuse it on every render:  idm render scene.json --library ${id}`);
+                }
             } catch (e) {
                 fail(e.message, 3);
             }
@@ -571,6 +585,9 @@ Usage:
                                                      upload to Idomoo, render, download MP4
                                                      (asks which library when run interactively)
   idm library  list                                  list Idomoo libraries (id + name)
+  idm library  create <name>                          create (or reuse) a library, print its id —
+                                                       capture it once, then render --library <id>
+                                                       every time so all videos share one library
   idm generate image|video|narration|music|voices   generate IDM assets via the Idomoo AI API
                                                      (saves files to ./idm_assets or -o; needs auth)
   idm init     [scene.json]                          write a starter scene
