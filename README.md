@@ -36,13 +36,13 @@ The installer already offers this menu (Claude Code / Codex / Cursor / Cowork / 
 
 | agent | command | lands in |
 |---|---|---|
-| **Claude Code** | `idm skill install` | `~/.claude/skills/idm-maker` |
-| **OpenAI Codex** | `idm skill install --codex` | `~/.codex/skills/idm-maker` |
-| **Cursor** | `idm skill install --cursor` | `~/.cursor/skills/idm-maker` + project `.cursor/skills` |
-| **Google Antigravity** | `idm skill install --antigravity` | IDE `~/.agents/skills/idm-maker` + CLI `~/.gemini/antigravity-cli/skills/idm-maker` (+ project `.agents`/`.agent`) |
-| **Claude Cowork / claude.ai** | `idm skill install --cowork` | writes `idm-maker-skill.zip` — upload it in the app: **Customize → + → Skills** |
+| **Claude Code** | `idm skill install` | `~/.claude/skills/idm-cli` |
+| **OpenAI Codex** | `idm skill install --codex` | `~/.codex/skills/idm-cli` |
+| **Cursor** | `idm skill install --cursor` | `~/.cursor/skills/idm-cli` + project `.cursor/skills` |
+| **Google Antigravity** | `idm skill install --antigravity` | IDE `~/.agents/skills/idm-cli` + CLI `~/.gemini/antigravity-cli/skills/idm-cli` (+ project `.agents`/`.agent`) |
+| **Claude Cowork / claude.ai** | `idm skill install --cowork` | writes `idm-cli-skill.zip` — upload it in the app: **Customize → + → Skills** |
 
-Flags combine (`--claude --cursor --antigravity --cowork`). For Cursor team projects, commit `.cursor/skills/idm-maker/` to the repo. Other agents: point them at [SKILL.md](SKILL.md) (CLI usage) and [skills/idm-maker/SKILL.md](skills/idm-maker/SKILL.md) (authoring guide) — plain markdown, no tooling assumptions.
+Flags combine (`--claude --cursor --antigravity --cowork`). For Cursor team projects, commit `.cursor/skills/idm-cli/` to the repo. Other agents: point them at [skills/idm-cli/SKILL.md](skills/idm-cli/SKILL.md) (CLI usage + authoring guide) — plain markdown, no tooling assumptions.
 
 Once installed, just ask your agent to *"make an idm of …"* — the skill triggers, writes the scene JSON, and drives `idm`.
 
@@ -132,7 +132,7 @@ Global flag `--json` on `compile` / `validate` / `render` / `auth` / `library` e
 
 The 30-second version: layers render bottom-first; times are seconds; colors are hex; asset paths resolve relative to the scene file. Any `animate` channel is a keyframe list `{"t": sec, "v": value, "ease": "outCubic"}` baked by the tween engine into per-frame VASCO arrays. `position`/`scale`/`rotation`/`anchor` compose into the transform matrix. Effects (blur, shadow, glow, stroke, overlay, corner-pin), masks (rect/ellipse/path, animatable/morphable), track mattes, sub-comps, rich-text styles, and per-character text animators are all inline sugar — and anything else passes through as raw VASCO, so the full engine surface is reachable.
 
-**Full reference:** [skills/idm-maker/references/format.md](skills/idm-maker/references/format.md). Working examples in [examples/](examples/) (`idm compile examples/demo.json`).
+**Full reference:** [skills/idm-cli/references/format.md](skills/idm-cli/references/format.md). Working examples in [examples/](examples/) (`idm compile examples/demo.json`).
 
 ## Built for
 

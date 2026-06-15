@@ -1,11 +1,11 @@
 ---
-name: idm-maker
-description: Author Idomoo IDM video files locally from a compact scene JSON, compiled with the `idm` CLI, optionally rendered to MP4 via the Idomoo API. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+name: idm-cli
+description: Author Idomoo IDM videos with the `idm` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
 ---
 
-# IDM Maker — compact scenes compiled to .idm locally
+# IDM CLI — author, generate assets, compile & render IDM videos
 
-Turn a short "scene" JSON into a full VASCO project, compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
+Drive the `idm` CLI end to end: turn a short "scene" JSON into a full VASCO project, generate any missing media (image / image-to-video / narration / music), compile it to a binary `.idm` entirely locally, and optionally render it to an MP4 on Idomoo.
 
 ## Setup — check BEFORE installing anything
 
@@ -24,9 +24,22 @@ The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaS
    idm validate /tmp/t.json
    ```
 
+## 🎨 The CLI generates assets — don't make the user supply everything
+
+The `idm` CLI can **create the media an IDM needs** via the Idomoo AI API (needs auth; saves files to a folder, default `./idm_assets/`). Do not assume the user must hand you every image/clip/voiceover:
+
+| command | makes |
+|---|---|
+| `idm generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>]` | a still PNG (async) |
+| `idm generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** MP4 clip from a still (async) |
+| `idm generate narration "<text>" --voice <voice_id>` | a TTS voiceover MP3 (`idm generate voices` lists voice IDs) |
+| `idm generate music "<prompt>" [--duration 30]` | an instrumental soundtrack |
+
+Typical chain: **image → animate it into video → add narration + music**, then point the scene's `src` at the saved local files. Full params/output in the *Generating assets* section of [references/format.md](references/format.md).
+
 ## Workflow
 
-1. **Ask the user about assets first**: do they have images, video clips, audio/music, fonts, or brand colors to use, **or should the CLI generate them?** Get file paths for anything they already have. For anything missing, the CLI can generate real assets via the Idomoo AI API — `idm generate image|video|narration|music` (needs auth; saves files to a folder). Read the *Generating assets* section in [references/format.md](references/format.md) for each tool's params and output. Use a generated/placeholder font only as a last resort — text layers REQUIRE a real `.ttf`/`.otf`. Skip the question only when the user already specified assets or explicitly asked you to generate or use placeholders.
+1. **ASK ABOUT ASSETS FIRST — this is a required gate, do not skip it.** Before writing any scene, ask the user, for each kind of media the video needs (images, video clips, audio/music): *do they already have a file, or should I generate it with `idm generate`?* Collect file paths for anything they have; plan a `generate` call for anything they don't. Only skip the question when the user already specified every asset or explicitly told you to generate/use placeholders. Text layers REQUIRE a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
 2. Understand what video the user wants (size, duration, layers, motion).
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
 4. Compile: `idm compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
@@ -40,7 +53,9 @@ The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaS
 6. To debug, use `--vasco` (dumps compiled VASCO JSON) or `idm inspect out.idm` (decode a binary back).
 
 Commands (a bare `.json` arg implies `compile`, a bare `.idm` implies `inspect`):
-`compile <scene.json> [-o out.idm] [--vasco]` · `validate <scene.json> [--print]` · `inspect <file.idm> [--assets <dir>]` · `render <scene.json|.idm> --library <id> [-o out.mp4] [--height] [--quality]` · `library list|create <name>` · `init [scene.json]` · `auth login|status` · `schema` · `update`. Add `--json` for machine-readable output. Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
+`compile <scene.json> [-o out.idm] [--vasco]` · `validate <scene.json> [--print]` · `inspect <file.idm> [--assets <dir>]` · `generate image|video|narration|music|voices ...` · `render <scene.json|.idm> --library <id> [-o out.mp4] [--height] [--quality]` · `library list|create <name>` · `init [scene.json]` · `auth login|status` · `schema` · `update`. Add `--json` for machine-readable output. Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
+
+**Agent conventions:** `--json` puts a machine-readable result object on stdout; errors are JSON on stderr. Non-interactive by default — with credentials in env and `--library` passed, nothing reads a TTY. Renders take minutes; run them in the background (the result JSON has `video_url` and `poster_url`).
 
 ## Scene format essentials
 

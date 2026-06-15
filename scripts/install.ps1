@@ -1,6 +1,6 @@
 # IDM CLI installer (Windows) — downloads the standalone binary from GitHub
 # releases, verifies its checksum, installs to %LOCALAPPDATA%\Programs\idm,
-# adds it to the user PATH, and installs the idm-maker agent skill.
+# adds it to the user PATH, and installs the idm-cli agent skill.
 #
 #   irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex
 #
@@ -58,12 +58,12 @@ try {
     if (-not $skillChoice) {
         if ([Environment]::UserInteractive) {
             Write-Host ''
-            Write-Host 'Install the idm-maker agent skill? (multiple allowed, e.g. 1,3)'
+            Write-Host 'Install the idm-cli agent skill? (multiple allowed, e.g. 1,3)'
             Write-Host '  1) Claude Code    (~\.claude\skills)'
             Write-Host '  2) OpenAI Codex   (~\.codex\skills)'
             Write-Host '  3) Cursor         (~\.cursor\skills + project .cursor\skills)'
             Write-Host '  4) Antigravity    (IDE ~\.agents\skills + CLI ~\.gemini\antigravity-cli\skills)'
-            Write-Host '  5) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)'
+            Write-Host '  5) Claude Cowork  (packages idm-cli-skill.zip to upload in the app)'
             Write-Host '  6) All of the above'
             Write-Host '  7) Skip'
             try { $skillChoice = Read-Host 'Choice [1]' } catch { $skillChoice = '' }

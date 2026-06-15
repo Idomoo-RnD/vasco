@@ -25,8 +25,9 @@ codec, and optionally renders an MP4 via the Idomoo API.
 - `src/auth.mjs` — credential resolution: flags > env > `~/.idm/credentials`.
 - `vendor/vasco-*.tgz` — the codec, trimmed to its runtime dep (`xxhashjs`). Bundled
   as a file dependency; no registry needed.
-- `skills/idm-maker/` — the authoring skill (installed by `idm skill install`).
-  Update it whenever scene-format behavior changes.
+- `skills/idm-cli/` — the agent skill (installed by `idm skill install`): CLI usage,
+  asset generation, and the scene-authoring guide + `references/`. Update it whenever
+  CLI commands or scene-format behavior change.
 - `schema/vasco.schema.json` — reference copy of the VASCO schema (the live one is
   imported from the vasco package).
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # IDM CLI installer — downloads the standalone binary for this platform from
 # GitHub releases, verifies its checksum, installs to ~/.local/bin, and installs
-# the idm-maker agent skill.
+# the idm-cli agent skill.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash
 #
@@ -79,12 +79,12 @@ SKILL_CHOICE="${IDM_SKILL:-}"
 if [ -z "$SKILL_CHOICE" ]; then
   if [ -r /dev/tty ] && [ -w /dev/tty ]; then
     log ""
-    log "Install the idm-maker agent skill? (multiple allowed, e.g. 1,3)"
+    log "Install the idm-cli agent skill? (multiple allowed, e.g. 1,3)"
     log "  1) Claude Code    (~/.claude/skills)"
     log "  2) OpenAI Codex   (~/.codex/skills)"
     log "  3) Cursor         (~/.cursor/skills + project .cursor/skills)"
     log "  4) Antigravity    (IDE ~/.agents/skills + CLI ~/.gemini/antigravity-cli/skills)"
-    log "  5) Claude Cowork  (packages idm-maker-skill.zip to upload in the app)"
+    log "  5) Claude Cowork  (packages idm-cli-skill.zip to upload in the app)"
     log "  6) All of the above"
     log "  7) Skip"
     printf 'Choice [1]: ' > /dev/tty

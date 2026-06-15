@@ -436,7 +436,7 @@ async function main() {
             // the IDE at ~/.agents/skills and the CLI at ~/.gemini/antigravity-cli/skills
             // (plus matching project dirs). Claude Cowork / claude.ai take the skill as
             // a ZIP uploaded in the app, so --cowork packages one instead.
-            const SKILL = 'idm-maker';
+            const SKILL = 'idm-cli';
             const home = homedir();
             const anyFlag = flag('--claude') || flag('--codex') || flag('--cursor') || flag('--antigravity') || flag('--cowork');
             const wantClaude = flag('--claude') || !anyFlag;
@@ -474,8 +474,8 @@ async function main() {
                 // which has no bundled skills/ so these candidates won't exist).
                 const scriptDir = process.argv[1] ? dirname(process.argv[1]) : '';
                 const localRoots = [
-                    scriptDir ? join(scriptDir, '..', 'skills', 'idm-maker') : '',
-                    resolve('skills', 'idm-maker'),
+                    scriptDir ? join(scriptDir, '..', 'skills', SKILL) : '',
+                    resolve('skills', SKILL),
                 ].filter(Boolean);
                 const findLocal = f => localRoots.map(r => join(r, f)).find(existsSync);
                 const contents = [];
@@ -485,7 +485,7 @@ async function main() {
                         contents.push([f, readFileSync(localPath, 'utf8')]);
                         continue;
                     }
-                    const r = await fetch(`${RAW}/skills/idm-maker/${f}`);
+                    const r = await fetch(`${RAW}/skills/${SKILL}/${f}`);
                     if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
                     contents.push([f, await r.text()]);
                 }
@@ -495,13 +495,13 @@ async function main() {
                         mkdirSync(dirname(path), { recursive: true });
                         writeFileSync(path, text);
                     }
-                    messages.push(`✅ installed idm-maker skill to ${dest}`);
+                    messages.push(`✅ installed ${SKILL} skill to ${dest}`);
                 }
                 if (wantCowork) {
                     const zip = makeZip(contents.map(([f, text]) => ({
-                        name: `idm-maker/${f}`, data: Buffer.from(text, 'utf8'),
+                        name: `${SKILL}/${f}`, data: Buffer.from(text, 'utf8'),
                     })));
-                    const zipPath = resolve('idm-maker-skill.zip');
+                    const zipPath = resolve(`${SKILL}-skill.zip`);
                     writeFileSync(zipPath, zip);
                     targets.push(zipPath);
                     messages.push(`✅ packaged ${zipPath}`,
@@ -594,7 +594,7 @@ Usage:
   idm auth     login | status                        manage Idomoo credentials (~/.idm/credentials)
   idm schema                                         print the VASCO JSON Schema
   idm skill    install [--claude] [--codex] [--cursor] [--antigravity] [--cowork]
-                                                     install the idm-maker agent skill: Claude Code
+                                                     install the idm-cli agent skill: Claude Code
                                                      (~/.claude/skills), OpenAI Codex (~/.codex/skills),
                                                      Cursor (~/.cursor/skills + project .cursor/skills),
                                                      Antigravity IDE + CLI (~/.agents/skills,
