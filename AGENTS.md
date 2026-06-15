@@ -47,7 +47,11 @@ Distribution is **standalone binaries** (Node SEA), built per platform by
 `.github/workflows/release.yml` on tag push (`git tag v1.x.y && git push --tags`)
 and attached to GitHub releases with a `checksums.txt`. `scripts/install.sh` /
 `install.ps1` download + verify + install them; `idm update` self-replaces the
-running binary from the latest release.
+running binary from the latest release, then refreshes the `idm-cli` skill in
+every agent dir that already has it (claude/codex/cursor/antigravity), migrating
+any legacy `idm-maker` copy. Skill load/write/refresh is shared between `skill
+install` and `update` via the `loadSkillContents`/`refreshInstalledSkills`
+helpers in `bin/idm.mjs`.
 
 `scripts/build-sea.mjs` builds locally for the current platform: esbuild bundles
 `bin/idm.mjs` into one CJS file, `node --experimental-sea-config` makes the blob,

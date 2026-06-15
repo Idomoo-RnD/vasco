@@ -12,7 +12,7 @@
 // the vendored codec uses legacy Buffer() constructors — silence the noise for users
 process.noDeprecation = true;
 
-import { readFileSync, writeFileSync, mkdirSync, renameSync, chmodSync, unlinkSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, renameSync, chmodSync, unlinkSync, rmSync, existsSync } from 'fs';
 import { resolve, dirname, basename, join } from 'path';
 import { homedir } from 'os';
 import { createInterface } from 'readline';
@@ -134,6 +134,80 @@ async function isSeaBinary() {
     } catch {
         return false;
     }
+}
+
+// ---- Agent skill (idm-cli) install/refresh -------------------------------
+// The skill ships the same SKILL.md + references everywhere; only the target
+// dir differs per agent. `idm-maker` is the legacy name — migrate it on touch.
+const SKILL_NAME = 'idm-cli';
+const LEGACY_SKILL_NAMES = ['idm-maker'];
+const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/motion-design.md', 'references/recipes.md'];
+
+// Load the skill files: prefer the repo checkout (dev — instant, offline), else
+// fetch the published copy from main (SEA binary has no bundled skills/).
+async function loadSkillContents() {
+    const scriptDir = process.argv[1] ? dirname(process.argv[1]) : '';
+    const localRoots = [
+        scriptDir ? join(scriptDir, '..', 'skills', SKILL_NAME) : '',
+        resolve('skills', SKILL_NAME),
+    ].filter(Boolean);
+    const findLocal = f => localRoots.map(r => join(r, f)).find(existsSync);
+    const contents = [];
+    for (const f of SKILL_FILES) {
+        const localPath = findLocal(f);
+        if (localPath) { contents.push([f, readFileSync(localPath, 'utf8')]); continue; }
+        const r = await fetch(`${RAW}/skills/${SKILL_NAME}/${f}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
+        contents.push([f, await r.text()]);
+    }
+    return contents;
+}
+
+function writeSkillContents(destDir, contents) {
+    for (const [f, text] of contents) {
+        const p = join(destDir, f);
+        mkdirSync(dirname(p), { recursive: true });
+        writeFileSync(p, text);
+    }
+}
+
+// Remove any legacy-named copies of the skill that sit beside `destDir`.
+function migrateLegacySkills(skillsBase) {
+    const removed = [];
+    for (const n of LEGACY_SKILL_NAMES) {
+        const legacy = join(skillsBase, n);
+        if (existsSync(legacy)) {
+            try { rmSync(legacy, { recursive: true, force: true }); removed.push(legacy); } catch { /* ignore */ }
+        }
+    }
+    return removed;
+}
+
+// Every agent's `skills/` parent dir. Used by `update` to refresh the skill
+// wherever it's ALREADY installed (never installs to an agent that lacks it).
+function agentSkillBases() {
+    const home = homedir();
+    return [
+        { label: 'Claude Code', base: join(home, '.claude', 'skills') },
+        { label: 'OpenAI Codex', base: join(home, '.codex', 'skills') },
+        { label: 'Cursor', base: join(home, '.cursor', 'skills') },
+        { label: 'Antigravity IDE', base: join(home, '.agents', 'skills') },
+        { label: 'Antigravity CLI', base: join(home, '.gemini', 'antigravity-cli', 'skills') },
+    ];
+}
+
+// Rewrite the skill in every agent dir that already has it (current OR legacy
+// name), migrating legacy dirs to the current name. Returns human messages.
+function refreshInstalledSkills(contents) {
+    const msgs = [];
+    for (const { label, base } of agentSkillBases()) {
+        const present = [SKILL_NAME, ...LEGACY_SKILL_NAMES].some(n => existsSync(join(base, n)));
+        if (!present) continue;
+        writeSkillContents(join(base, SKILL_NAME), contents);
+        msgs.push(`✅ ${label}: refreshed ${join(base, SKILL_NAME)}`);
+        for (const legacy of migrateLegacySkills(base)) msgs.push(`   ↳ removed legacy ${legacy}`);
+    }
+    return msgs;
 }
 
 async function main() {
@@ -436,7 +510,6 @@ async function main() {
             // the IDE at ~/.agents/skills and the CLI at ~/.gemini/antigravity-cli/skills
             // (plus matching project dirs). Claude Cowork / claude.ai take the skill as
             // a ZIP uploaded in the app, so --cowork packages one instead.
-            const SKILL = 'idm-cli';
             const home = homedir();
             const anyFlag = flag('--claude') || flag('--codex') || flag('--cursor') || flag('--antigravity') || flag('--cowork');
             const wantClaude = flag('--claude') || !anyFlag;
@@ -446,62 +519,40 @@ async function main() {
                 || (!anyFlag && (existsSync(join(home, '.agents')) || existsSync(join(home, '.gemini', 'antigravity-cli'))));
             const wantCowork = flag('--cowork');
             const targets = [];
-            // adds <base>/skills/<SKILL> when base exists, or always when force=true
+            // adds <base>/skills/<SKILL_NAME> when base exists, or always when force=true
             const addSkillDir = (base, force = false) => {
-                if (force || existsSync(base)) targets.push(join(base, 'skills', SKILL));
+                if (force || existsSync(base)) targets.push(join(base, 'skills', SKILL_NAME));
             };
-            if (wantClaude) targets.push(join(home, '.claude', 'skills', SKILL));
-            if (wantCodex) targets.push(join(home, '.codex', 'skills', SKILL));
+            if (wantClaude) targets.push(join(home, '.claude', 'skills', SKILL_NAME));
+            if (wantCodex) targets.push(join(home, '.codex', 'skills', SKILL_NAME));
             if (wantCursor) {
-                targets.push(join(home, '.cursor', 'skills', SKILL));
+                targets.push(join(home, '.cursor', 'skills', SKILL_NAME));
                 const projCursor = resolve('.cursor');
                 if (existsSync(projCursor) && projCursor !== join(home, '.cursor'))
-                    targets.push(join(projCursor, 'skills', SKILL));
+                    targets.push(join(projCursor, 'skills', SKILL_NAME));
             }
             if (wantAntigravity) {
                 // both products' global dirs (IDE + CLI) — user asked for ui and terminal
-                targets.push(join(home, '.agents', 'skills', SKILL));                       // IDE (UI)
-                targets.push(join(home, '.gemini', 'antigravity-cli', 'skills', SKILL));     // CLI (terminal)
+                targets.push(join(home, '.agents', 'skills', SKILL_NAME));                       // IDE (UI)
+                targets.push(join(home, '.gemini', 'antigravity-cli', 'skills', SKILL_NAME));     // CLI (terminal)
                 // project scope: .agents (IDE) and .agent (CLI) when present in the repo
                 addSkillDir(resolve('.agents'));
                 addSkillDir(resolve('.agent'));
             }
-            const files = ['SKILL.md', 'references/format.md', 'references/motion-design.md', 'references/recipes.md'];
             const messages = [];
             try {
-                // Prefer the repo's local skill files (dev checkout — instant, offline,
-                // no CDN lag); fall back to fetching the published copy (SEA binary,
-                // which has no bundled skills/ so these candidates won't exist).
-                const scriptDir = process.argv[1] ? dirname(process.argv[1]) : '';
-                const localRoots = [
-                    scriptDir ? join(scriptDir, '..', 'skills', SKILL) : '',
-                    resolve('skills', SKILL),
-                ].filter(Boolean);
-                const findLocal = f => localRoots.map(r => join(r, f)).find(existsSync);
-                const contents = [];
-                for (const f of files) {
-                    const localPath = findLocal(f);
-                    if (localPath) {
-                        contents.push([f, readFileSync(localPath, 'utf8')]);
-                        continue;
-                    }
-                    const r = await fetch(`${RAW}/skills/${SKILL}/${f}`);
-                    if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${f}`);
-                    contents.push([f, await r.text()]);
-                }
+                const contents = await loadSkillContents();
                 for (const dest of targets) {
-                    for (const [f, text] of contents) {
-                        const path = join(dest, f);
-                        mkdirSync(dirname(path), { recursive: true });
-                        writeFileSync(path, text);
-                    }
-                    messages.push(`✅ installed ${SKILL} skill to ${dest}`);
+                    writeSkillContents(dest, contents);
+                    messages.push(`✅ installed ${SKILL_NAME} skill to ${dest}`);
+                    for (const legacy of migrateLegacySkills(dirname(dest)))
+                        messages.push(`   ↳ removed legacy ${legacy}`);
                 }
                 if (wantCowork) {
                     const zip = makeZip(contents.map(([f, text]) => ({
-                        name: `${SKILL}/${f}`, data: Buffer.from(text, 'utf8'),
+                        name: `${SKILL_NAME}/${f}`, data: Buffer.from(text, 'utf8'),
                     })));
-                    const zipPath = resolve(`${SKILL}-skill.zip`);
+                    const zipPath = resolve(`${SKILL_NAME}-skill.zip`);
                     writeFileSync(zipPath, zip);
                     targets.push(zipPath);
                     messages.push(`✅ packaged ${zipPath}`,
@@ -533,6 +584,16 @@ async function main() {
                 console.log(`✅ updated ${exe}`);
             } catch (e) {
                 fail(`Update failed: ${e.message}`);
+            }
+            // Keep skills in sync with the binary: refresh the skill in every
+            // agent dir that already has it (migrating any legacy idm-maker copy).
+            // Best-effort — a skill-refresh hiccup must not fail the binary update.
+            try {
+                const msgs = refreshInstalledSkills(await loadSkillContents());
+                if (msgs.length) { console.log('Refreshing installed skills:'); for (const m of msgs) console.log(m); }
+                else console.log('No installed skills to refresh (install with: idm skill install).');
+            } catch (e) {
+                console.error(`⚠ skill refresh skipped: ${e.message}`);
             }
             break;
         }
@@ -600,7 +661,10 @@ Usage:
                                                      Antigravity IDE + CLI (~/.agents/skills,
                                                      ~/.gemini/antigravity-cli/skills),
                                                      or package a ZIP to upload into Claude Cowork
-  idm update                                         self-update to the latest release
+  idm update                                         self-update the binary to the latest release,
+                                                     then refresh the idm-cli skill in every agent
+                                                     dir that already has it (claude/codex/cursor/
+                                                     antigravity; migrates legacy idm-maker)
   idm version
 
 Auth resolution: --account/--token > IDOMOO_ACCOUNT_ID/IDOMOO_SECRET_KEY env > ~/.idm/credentials
