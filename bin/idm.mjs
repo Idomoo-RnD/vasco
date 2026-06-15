@@ -247,7 +247,7 @@ async function main() {
             const outPath = resolve(opt('-o', opt('--out', filename.replace(/\.idm$/i, '') + '.mp4')));
 
             try {
-                const { videoUrl, posterUrl } = await renderIdm({
+                const { videoUrl, posterUrl, libraryId } = await renderIdm({
                     idmBytes, filename,
                     accountId: creds.account_id, secret: creds.secret_key,
                     base: apiBase(), libraryName: library,
@@ -257,11 +257,12 @@ async function main() {
                 if (!JSON_MODE) console.log('⬇️  downloading MP4...');
                 mkdirSync(dirname(outPath), { recursive: true });
                 await download(videoUrl, outPath);
-                if (JSON_MODE) out({ ok: true, mp4_path: outPath, video_url: videoUrl, poster_url: posterUrl });
+                if (JSON_MODE) out({ ok: true, mp4_path: outPath, video_url: videoUrl, poster_url: posterUrl, library_id: libraryId });
                 else {
                     console.log(`✅ wrote ${outPath}`);
-                    console.log(`   video:  ${videoUrl}`);
-                    if (posterUrl) console.log(`   poster: ${posterUrl}`);
+                    console.log(`   video:   ${videoUrl}`);
+                    if (posterUrl) console.log(`   poster:  ${posterUrl}`);
+                    console.log(`   library: ${libraryId}  ·  reuse with --library ${libraryId} so every render lands here`);
                 }
             } catch (e) {
                 const msg = e?.message ?? String(e);

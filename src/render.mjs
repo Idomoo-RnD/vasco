@@ -55,12 +55,17 @@ export async function createLibrary(base, H, name) {
     return libId(made.body ?? {});
 }
 
-// Accepts a library name or id; creates the library when no existing one matches.
+// Accepts a library name or id; reuses an existing match (id exact, name
+// case-insensitive + trimmed) and only creates when nothing matches. Reusing
+// the RETURNED id on later renders guarantees the same library every time —
+// matching by a human name is fragile (case/whitespace/duplicate names).
 async function getOrCreateLibrary(base, H, nameOrId) {
+    const want = String(nameOrId).trim();
+    const wantLc = want.toLowerCase();
     const libs = await listLibraries(base, H);
     for (const it of libs)
-        if (it.name === String(nameOrId) || it.id === String(nameOrId)) return it.id;
-    return createLibrary(base, H, String(nameOrId));
+        if (it.id === want || String(it.name).trim().toLowerCase() === wantLc) return it.id;
+    return createLibrary(base, H, want);
 }
 
 async function uploadAndExport(base, H, libraryId, filename, idmBytes, log) {
@@ -155,6 +160,7 @@ export async function renderIdm({ idmBytes, filename, accountId, secret, base = 
     const H = { Accept: 'application/json', Authorization: `Bearer ${token}` };
 
     const libraryId = await getOrCreateLibrary(base, H, libraryName);
+    log(`Using library ${libraryId} — reuse it on every later render with --library ${libraryId}`);
     const { sceneJson, sceneId } = await uploadAndExport(base, H, libraryId, filename, idmBytes, log);
 
     log('Starting render...');
@@ -171,7 +177,7 @@ export async function renderIdm({ idmBytes, filename, accountId, secret, base = 
         const s = await jfetch(checkUrl, { headers: { Accept: 'application/json' } });
         const status = s.status === 200 ? (s.body?.status ?? '') : `HTTP${s.status}`;
         if (status !== last) { log(`Render status: ${status} (~${(i + 1) * 8}s)`); last = status; }
-        if (status === 'VIDEO_AVAILABLE') return { videoUrl, posterUrl };
+        if (status === 'VIDEO_AVAILABLE') return { videoUrl, posterUrl, libraryId };
         if (status === 'FAILED' || status === 'ERROR')
             throw new Error(`Render failed with status ${status}: ${s.text.slice(0, 300)}`);
     }
