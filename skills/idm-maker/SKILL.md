@@ -30,9 +30,12 @@ The `idm` CLI is a **standalone self-contained binary**. It embeds its own JavaS
 2. Understand what video the user wants (size, duration, layers, motion).
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
 4. Compile: `idm compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
-5. To render an MP4: `idm render scene.json --library "<name>" -o out.mp4`.
+5. To render an MP4: `idm render scene.json --library "<saved-lib-id>" -o out.mp4`.
    - **Credentials**: ask the user for their **account ID** and **secret key** if `idm auth status` fails. Set them via `idm auth login --account <id> --token <secret>`, or env `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`.
-   - **Library**: the upload destination is the user's choice — never pick one for them. Run `idm library list --json`, show the user the existing libraries, and ask which to upload to (or a name for a new one — passing a new name creates it). Then pass it as `--library "<name-or-id>"`. Without the flag, a non-interactive render fails with the library list in the error.
+   - **Library — pick ONE and reuse it (do NOT create a new library per IDM).** Every render in a project/session must upload to the **same** library. Creating a fresh library for each upload scatters renders across many libraries and is bad practice.
+     - **First render only**: run `idm library list --json`, show the user the existing libraries, and ask **once** which to use — or a name for a new one (a new name creates it). Capture the resolved library **id** (from `idm library list --json` after the upload, or the render output) and **save it** so you can reuse it — keep it for the whole session and persist it for the project (e.g. note it in your memory, or write a small `.idm-library` file next to the scenes).
+     - **Every later render**: pass that **same** `--library <saved-id>` **without asking again**. `render` get-or-creates by name/id, so reusing the same value always targets the same library. Only ask for / switch to a different library when the **user explicitly says so**.
+     - Without `--library`, a non-interactive render fails with the library list in the error.
    - A render takes minutes (upload → export → render, polled); run it in the background and report the printed video/poster URLs.
 6. To debug, use `--vasco` (dumps compiled VASCO JSON) or `idm inspect out.idm` (decode a binary back).
 
