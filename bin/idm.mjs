@@ -466,7 +466,7 @@ async function main() {
                 addSkillDir(resolve('.agents'));
                 addSkillDir(resolve('.agent'));
             }
-            const files = ['SKILL.md', 'references/format.md', 'references/motion-design.md'];
+            const files = ['SKILL.md', 'references/format.md', 'references/motion-design.md', 'references/recipes.md'];
             const messages = [];
             try {
                 // Prefer the repo's local skill files (dev checkout — instant, offline,

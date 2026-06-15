@@ -145,6 +145,8 @@ Flat = amateur. Build z-depth even in 2D:
 
 ## 12. Recipes (drop-in keyframe patterns)
 
+> For a much larger, categorised set (42 effects: text, transitions, motion, masks, special FX, extras), see **[recipes.md](recipes.md)**. The patterns below are the essential core.
+
 Hero title — fade + rise + settle (anchored at comp center `[960,540]`; position keyframes are **anchor + offset**, resting *at* the anchor — see the anchor+position warning in §4):
 ```json
 "anchor": [960, 540],
