@@ -60,6 +60,16 @@ Every element that enters must also exit (fade, or move off, or get covered) —
 
 Exits mirror entrances but faster (~0.7×) and with ease-IN, often with a slight scale-up (1→1.1) + fade so it "leaves toward camera".
 
+> ⚠️ **Combining anchor + position (the #1 transform bug).** Scale-in and slide-in pull in opposite directions here: a scale/rotate wants an `anchor` at the element's center, but the workhorse rise uses `position [0,40]→[0,0]` (an *offset*). **You cannot use both forms together.** Once an `anchor` is set, `position` is the **absolute comp point where the anchor lands**, so a `[0,0]` keyframe snaps the layer to the top-left corner. When a hero element both scales *and* moves, anchor it at its center and write every position keyframe as **anchor + offset**, resting *at* the anchor:
+> ```json
+> "anchor": [960, 540],
+> "animate": {
+>   "scale":    [ {"t":0,"v":0.9,"ease":"outExpo"}, {"t":0.6,"v":1} ],
+>   "position": [ {"t":0,"v":[960,580],"ease":"outCubic"}, {"t":0.7,"v":[960,540]} ]
+> }
+> ```
+> If the element only fades/rises and never scales or rotates, **drop the anchor** and keep `position [0,40]→[0,0]` as a clean offset. Anchor only when you pivot.
+
 ## 5. Text in motion
 
 Text is where motion design lives or dies. Beyond fade+rise:
@@ -126,6 +136,7 @@ Flat = amateur. Build z-depth even in 2D:
 
 - `linear` easing on reveals; everything the same duration; no stagger.
 - Entrances easing-in or exits easing-out (backwards feel).
+- Animating `position` toward `[0,0]` on a layer that has an `anchor` set — with an anchor, `position` is the **absolute** point where the pivot lands, so `[0,0]` drags the layer to the top-left corner. Bake the anchor coords into every position keyframe (anchor + offset), or drop the anchor if you aren't scaling/rotating.
 - Elements that pop in and never leave, or vanish instantly on a cut.
 - Three+ effects on every layer; glow on everything; harsh full-opacity drop shadows.
 - Text that animates out before it can be read; body text flying in per-letter (too slow to read — cascade words instead).
@@ -134,14 +145,16 @@ Flat = amateur. Build z-depth even in 2D:
 
 ## 12. Recipes (drop-in keyframe patterns)
 
-Hero title — fade + rise + settle:
+Hero title — fade + rise + settle (anchored at comp center `[960,540]`; position keyframes are **anchor + offset**, resting *at* the anchor — see the anchor+position warning in §4):
 ```json
+"anchor": [960, 540],
 "animate": {
   "opacity":  [ {"t":0,"v":0,"ease":"outQuad"}, {"t":0.5,"v":1} ],
-  "position": [ {"t":0,"v":[0,60],"ease":"outExpo"}, {"t":0.7,"v":[0,0]} ],
+  "position": [ {"t":0,"v":[960,600],"ease":"outExpo"}, {"t":0.7,"v":[960,540]} ],
   "scale":    [ {"t":0.7,"v":1}, {"t":0.8,"v":1.03,"ease":"inOutSine"}, {"t":0.95,"v":1} ]
 }
 ```
+(Only fading + rising, no scale/rotation? Drop the `anchor` and use a plain offset `"position":[[0,60]→[0,0]]` instead.)
 
 Word cascade (length-independent) — on a text layer:
 ```json
@@ -161,8 +174,9 @@ Stat slam with impact + camera shake (numbers/prices):
 ```
 (anchor the layer at its center; fire a white flash `solid` at `t≈0` of the slam.)
 
-Card slide-in with overshoot (stagger siblings 0.1s apart):
+Card slide-in with overshoot (stagger siblings 0.1s apart). Anchor at the card's center `[540,540]`; positions are **absolute landing points** (anchor x ± offset), resting *at* the anchor `[540,540]`:
 ```json
+"anchor": [540, 540],
 "animate": { "position": [ {"t":0,"v":[-500,540],"ease":"outExpo"}, {"t":0.8,"v":[540,540]},
   {"t":6.7,"v":[540,540],"ease":"inQuad"}, {"t":7.2,"v":[-600,540]} ] }
 ```

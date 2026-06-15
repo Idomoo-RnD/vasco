@@ -40,7 +40,23 @@ Passthrough at comp level: `shutter_angle`, `shutter_phase`, `transition`.
 | `mask` | inline mask, see below |
 | `matte` | track matte, see below |
 
-Position/scale/rotation compose to the VASCO 4×4 `transform`. Scaling/rotation pivot on `anchor`.
+Position/scale/rotation compose to the VASCO 4×4 `transform` as `T(position)·R·S·T(−anchor)`. Scaling/rotation pivot on `anchor`.
+
+> ⚠️ **`anchor` + `position` — the #1 transform bug.** Once you set an `anchor`, `position` is the **absolute comp coordinate where that anchor lands — not an offset.** It defaults to the anchor, so an anchored layer with no `position` rests exactly in place. If you set an anchor and then animate `position` toward `[0,0]` (offset-style), you drag the pivot to the top-left corner and the whole layer flies up there.
+>
+> To scale/rotate around the center **and** move it (rise, slide, drift), express every position keyframe as **anchor + offset**, with the *resting* keyframe equal to the anchor:
+> ```json
+> // grow in place at comp center [960,540] while rising 40px into position
+> { "type": "text", "text": "Hello", "font": "./f.ttf", "box": [0,440,1920,200],
+>   "align": "center middle", "anchor": [960, 540],
+>   "animate": {
+>     "scale":    [ {"t":0,"v":0.9,"ease":"outExpo"}, {"t":0.6,"v":1} ],
+>     "position": [ {"t":0,"v":[960,580],"ease":"outCubic"}, {"t":0.7,"v":[960,540]} ]
+>   } }
+> ```
+> - ❌ `"anchor":[960,540]` + `"position":[[0,40]→[0,0]]` → snaps to top-left.
+> - ✅ `"anchor":[960,540]` + `"position":[[960,580]→[960,540]]` → rises into place, centered.
+> - **No pivot needed?** Omit `anchor` entirely and `position` becomes a plain offset from the layer's natural spot (e.g. `[0,40]→[0,0]` for a simple fade-rise). Only reach for an anchor when you also scale or rotate.
 
 ## Text
 

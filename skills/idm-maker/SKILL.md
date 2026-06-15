@@ -73,7 +73,10 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 ## Rules of thumb
 
 - Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Asset files must exist at compile time. A bundled free font ships with the repo at `examples/assets/DejaVuSans.ttf` (`idm schema` prints the full VASCO schema if you need an exotic property).
-- `anchor` is the pivot for scale/rotation, in comp coordinates; `position` is where that pivot lands and **defaults to the anchor** — so to scale/rotate a layer in place around its center, set only `anchor` to the layer's center point. Without an anchor, `position` is a plain offset from the layer's natural spot. (The anchor is baked into the transform matrix — the engine does not apply `anchor_point` itself.)
+- **`anchor` + `position` — the #1 transform bug. Read this before animating position on an anchored layer.** `anchor` is the pivot for scale/rotation (comp coords), and `position` is the absolute comp point where that pivot **lands** — it is *not* an offset once an anchor is set. `position` **defaults to the anchor**, so set *only* `anchor` (the layer's center) and the layer scales/rotates in place. The trap: setting an anchor and then animating `position` to `[0,0]` (offset-style) snaps the pivot to the top-left corner and yanks the whole layer up there. To scale/rotate in place **and** move (rise/slide), write every position keyframe as **anchor + offset**, and make the *resting* keyframe equal the anchor:
+  - ❌ `"anchor":[960,540]` with `"position":[[0,40]→[0,0]]` → flies to the top-left.
+  - ✅ `"anchor":[960,540]` with `"position":[[960,580]→[960,540]]` → rises 40px into place, centered.
+  - Just need a plain pixel nudge with no pivot? **Omit `anchor`** and `position` is a simple offset from the layer's natural spot. (The anchor is baked into the transform as `T(position)·R·S·T(−anchor)` — the engine does not apply `anchor_point` itself.)
 - The `ease` on a keyframe shapes the segment leaving it; if absent, the next keyframe's ease is used (so either CSS-style or AE-style placement works).
 - Keyframe times are relative to the layer's `start`, not the comp.
 - Sub-comps that reference other sub-comps must be declared after the comps they reference inside `comps` (the main scene may reference any of them).
