@@ -75,7 +75,18 @@ Position/scale/rotation compose to the VASCO 4×4 `transform` as `T(position)·R
   ```
   Empty/`all glyphs present` → safe to compile. Any `MISSING` → fix the font or the text first.
 - `align`: words from `left center right` + `top middle baseline bottom`, e.g. `"center middle"`, or `{"h": "center", "v": "top"}`.
-- **Rich spans** — `"styles": [{ "start": 0, "length": 5, "font": "./bold.ttf", "size": 60, "color": "#ff0000", "bold": true, "italic": true, "underline": true, "strikethrough": true, "highlight": "#ffff0080", "tracking": 0, "leading": 1.2, "shift": 0 }]` (`font` optional — defaults to the layer font).
+- **Rich spans (typography)** — `"styles"` is a list of per-character-range overrides, each `{ "start": <char index>, "length": <chars>, ... }`. **Confirmed to render:** `color` (hex), `size`, `tracking`, `leading`, `shift`, and a per-span `font` (`font` optional — defaults to the layer font). Example:
+  ```json
+  "text": "Rich VASCO Text",
+  "styles": [
+    { "start": 0,  "length": 5, "color": "#ff5a5f", "font": "./Bold.ttf" },
+    { "start": 5,  "length": 6, "color": "#ffd166", "tracking": 6 },
+    { "start": 11, "length": 4, "color": "#4cc9f0" }
+  ]
+  ```
+  - ⚠️ **Spans MUST cover every character contiguously — including the spaces.** The renderer drops any character not covered by a span, so a gap (e.g. a space left out between two spans) **disappears** and words jam together ("Rich VASCO" → "RichVASCO"). Always extend each span to include its trailing space, or chain spans edge-to-edge so `start[n] = start[n-1] + length[n-1]` with no holes.
+  - **Bold / italic:** point the span's `font` at a real **bold/italic font file** (e.g. `./Inter-Bold.ttf`). The boolean `bold`/`italic` flags do **not** synthesize a weight/slant in the renderer — they are no-ops without a variant font.
+  - **`underline` / `strikethrough` / `highlight` do NOT render** in the current engine — don't rely on them. For an underline, draw a thin `solid` bar under the text; for highlight, place a `solid` (or a rounded image) behind the text layer.
 - **Per-character animators** (After-Effects-style): `"animators": [...]` — raw VASCO `IdmTextAnimator` objects, but `color` accepts hex and any object may carry `animate`. Example, words fading in one by one:
 
 ```json

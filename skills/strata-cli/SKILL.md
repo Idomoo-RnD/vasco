@@ -88,7 +88,7 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 
 **Motion design** — for anything that should look polished, cinematic, high-end, or "great" (ads, title sequences, brand videos), read [references/motion-design.md](references/motion-design.md). It's a pro-level craft guide grounded in this engine: timing & spacing, the easing vocabulary (which ease for which feel), entrances/exits, kinetic text, beat transitions, effects with intent, depth/camera/atmosphere, rhythm to audio, polish details, anti-patterns, and drop-in keyframe recipes.
 
-**Recipes** — [references/recipes.md](references/recipes.md) has 42 ready-to-paste effect recipes in the compact format, grouped by **text · transitions · motion · masks · special FX · extras** (tracking-in, typewriter-with-following-caret, per-word bounce, glitch, 3D flips, scale-through, whip-pan, light-leak, iris/clock wipes, camera dolly, fly-through, bounce+squash, mattes, glow/DOF/RGB-split/corner-pin/reflection/frosted-glass/colour-grade, rich-text styles, easing comparison). Copy a snippet into your scene's `layers` and tune.
+**Recipes** — [references/recipes.md](references/recipes.md) has 43 ready-to-paste effect recipes in the compact format, grouped by **text · transitions · motion · masks · special FX · extras** (tracking-in, rich multi-style headline, typewriter-with-following-caret, per-word bounce, glitch, 3D flips, scale-through, whip-pan, light-leak, iris/clock wipes, camera dolly, fly-through, bounce+squash, mattes, glow/DOF/RGB-split/corner-pin/reflection/frosted-glass/colour-grade, rich-text styles, easing comparison). Copy a snippet into your scene's `layers` and tune.
 
 ## Rules of thumb
 

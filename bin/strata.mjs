@@ -29,7 +29,7 @@ const args = process.argv.slice(2);
 
 // `strata scene.json` / `strata file.idm` — a bare file arg implies the command.
 const COMMANDS = ['compile', 'build', 'validate', 'inspect', 'init', 'render',
-    'auth', 'library', 'generate', 'schema', 'skill', 'update', 'help', 'version'];
+    'auth', 'library', 'generate', 'schema', 'skill', 'update', 'uninstall', 'help', 'version'];
 if (args[0] && !COMMANDS.includes(args[0]) && !args[0].startsWith('-')) {
     if (/\.json$/i.test(args[0])) args.unshift('compile');
     else if (/\.idm$/i.test(args[0])) args.unshift('inspect');
@@ -598,6 +598,72 @@ async function main() {
             break;
         }
 
+        case 'uninstall': {
+            // Reverse an install: remove the agent skill everywhere it's installed
+            // (current + legacy names), the installed binary, and — with --purge —
+            // stored credentials. PATH edits are left to the user (printed as a note).
+            const purge = flag('--purge');
+            const assumeYes = flag('--yes') || flag('-y') || JSON_MODE;
+            const home = homedir();
+
+            const skillDirs = [];
+            for (const { base } of agentSkillBases())
+                for (const n of [SKILL_NAME, ...LEGACY_SKILL_NAMES]) {
+                    const d = join(base, n);
+                    if (existsSync(d)) skillDirs.push(d);
+                }
+            const sea = await isSeaBinary();
+            const exe = sea ? process.execPath : null;
+            const credDirs = purge ? [join(home, '.strata'), join(home, '.idm')].filter(existsSync) : [];
+
+            if (!skillDirs.length && !exe && !credDirs.length) {
+                out({ ok: true, removed: [] }, 'Nothing to uninstall.');
+                break;
+            }
+
+            if (!assumeYes && process.stdin.isTTY) {
+                console.error('strata uninstall will remove:');
+                for (const d of skillDirs) console.error(`  skill   ${d}`);
+                if (exe) console.error(`  binary  ${exe}`);
+                for (const d of credDirs) console.error(`  creds   ${d}`);
+                const a = await ask('Proceed? [y/N]: ');
+                if (!/^y(es)?$/i.test(a)) fail('Aborted.', 1);
+            }
+
+            const removed = [];
+            const notes = [];
+            for (const d of [...skillDirs, ...credDirs]) {
+                try { rmSync(d, { recursive: true, force: true }); removed.push(d); }
+                catch (e) { notes.push(`could not remove ${d}: ${e.message}`); }
+            }
+            if (exe) {
+                try {
+                    // Windows can't delete a running exe — rename it aside so the name
+                    // frees up immediately; the .old is cleaned on next reboot/install.
+                    if (process.platform === 'win32') {
+                        renameSync(exe, exe + '.old');
+                        try { unlinkSync(exe + '.old'); }
+                        catch { notes.push(`binary is in use; it will be removed on reboot: ${exe}`); }
+                    } else {
+                        unlinkSync(exe);
+                    }
+                    removed.push(exe);
+                    notes.push('if the install dir was on your PATH, remove it manually (Windows: User env PATH; Unix: your shell rc).');
+                } catch (e) {
+                    notes.push(`could not remove binary ${exe}: ${e.message} — delete it manually.`);
+                }
+            } else {
+                notes.push('dev checkout — no installed binary to remove (handled skills/creds only).');
+            }
+            if (!purge) notes.push('credentials kept — re-run with --purge to delete ~/.strata too.');
+
+            out({ ok: true, removed, notes }, [
+                removed.length ? '✅ removed:\n' + removed.map(r => '   ' + r).join('\n') : 'Nothing removed.',
+                ...notes.map(nt => '• ' + nt),
+            ].join('\n'));
+            break;
+        }
+
         case 'init': {
             const outPath = resolve(args[1] ?? 'scene.json');
             const starter = {
@@ -664,7 +730,10 @@ Usage:
   strata update                                         self-update the binary to the latest release,
                                                      then refresh the strata-cli skill in every agent
                                                      dir that already has it (claude/codex/cursor/
-                                                     antigravity; migrates legacy strata-maker)
+                                                     antigravity; migrates legacy idm-cli/idm-maker)
+  strata uninstall [--purge] [--yes]                 remove the agent skill from every agent dir and
+                                                     delete the installed binary (--purge also removes
+                                                     ~/.strata credentials; --yes skips the prompt)
   strata version
 
 Auth resolution: --account/--token > IDOMOO_ACCOUNT_ID/IDOMOO_SECRET_KEY env > ~/.strata/credentials

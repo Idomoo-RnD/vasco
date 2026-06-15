@@ -1,6 +1,6 @@
 # Recipe library — drop-in keyframe patterns
 
-42 ready-to-use motion-design recipes in the **compact scene format**. Each snippet is one (or a few) layers — paste into a scene's `layers`, swap the font/box/colours, and tune the timing. Times are **seconds**; coordinates assume a 1280×720 comp (scale to your size). Read [motion-design.md](motion-design.md) for the craft theory behind these.
+43 ready-to-use motion-design recipes in the **compact scene format**. Each snippet is one (or a few) layers — paste into a scene's `layers`, swap the font/box/colours, and tune the timing. Times are **seconds**; coordinates assume a 1280×720 comp (scale to your size). Read [motion-design.md](motion-design.md) for the craft theory behind these.
 
 **Conventions used below**
 - `"./font.ttf"` — any real `.ttf`/`.otf`. `"./image.jpg"` — your media.
@@ -22,6 +22,24 @@ Contents: [Text](#1-text) · [Transitions](#2-transitions) · [Motion](#3-motion
     "ranges": [{ "shape": "square", "animate": { "amount": [{"t":0,"v":1,"ease":"outExpo"},{"t":1.0,"v":0}] } }] }],
   "animate": { "opacity": [{"t":0,"v":0},{"t":0.4,"v":1,"ease":"outCubic"}] } }
 ```
+
+### Rich multi-style headline (per-span colour + word entrance)
+Per-span `color`/`size`/`tracking` plus a word-by-word rise-and-fade. **Spans must cover every character including spaces** (extend each span over its trailing space) or the gaps vanish. For bold/italic use a real variant font in the span's `font`; `underline`/`strikethrough`/`highlight` don't render — fake them with a `solid`.
+```json
+{ "type": "text", "name": "headline", "text": "Rich VASCO Text",
+  "font": "./font.ttf", "size": 120, "color": "#ffffff",
+  "box": [120,120,1040,150], "align": "left middle", "tracking": 1,
+  "styles": [
+    { "start": 0,  "length": 5, "color": "#ff5a5f", "font": "./font-bold.ttf" },
+    { "start": 5,  "length": 6, "color": "#ffd166", "tracking": 6 },
+    { "start": 11, "length": 4, "color": "#4cc9f0" }
+  ],
+  "animators": [{ "opacity": 0, "position": [0,60,0],
+    "ranges": [{ "based_on": "words", "shape": "ramp_up",
+      "animate": { "start": [{"t":0,"v":0},{"t":1.6,"v":1,"ease":"outCubic"}],
+                   "end":   [{"t":0,"v":0.34},{"t":1.6,"v":1.34}] } }] }] }
+```
+*(Fake underline: a thin `solid` bar under the box. Fake highlight: a `solid` behind the text layer.)*
 
 ### Typewriter with a caret that follows the text
 Per-character hard-edged reveal (`shape:"square"`, `start` stepped one notch per char), plus a caret solid whose `x` is stepped to the **cumulative glyph advances** (`x += size × advance/1000`; Arial 'm'≈833, 'i'≈222, space≈278). Use a monospace font for exact tracking.

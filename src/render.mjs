@@ -37,11 +37,21 @@ export async function getToken(base, accountId, secret) {
 const libId = it => String(it.id ?? it.library_id ?? String(it.ref ?? '').replace(/\/+$/, '').split('/').pop());
 const libName = it => it.name ?? it.library_name ?? '';
 
-export async function listLibraries(base, H) {
-    const list = await jfetch(`${base}/libraries`, { headers: H });
+export async function listLibraries(base, H, limit = 1000) {
+    // /libraries defaults to ~10 items; pass a high limit so name-matching and the
+    // `library list` display see the full set (the API caps the page, not the total).
+    const list = await jfetch(`${base}/libraries${limit ? `?limit=${limit}` : ''}`, { headers: H });
     const items = Array.isArray(list.body) ? list.body
         : list.body?.libraries ?? list.body?.data ?? [];
     return items.map(it => ({ id: libId(it), name: libName(it) }));
+}
+
+// GET /libraries/{id} — true when a library with this exact id exists. The list
+// endpoint is paginated and omits recently-created libraries, so an id must be
+// verified directly or `render` would re-create it on every run.
+async function libraryExists(base, H, id) {
+    const r = await jfetch(`${base}/libraries/${encodeURIComponent(id)}`, { headers: H });
+    return r.status === 200;
 }
 
 export async function createLibrary(base, H, name) {
@@ -61,6 +71,10 @@ export async function createLibrary(base, H, name) {
 // matching by a human name is fragile (case/whitespace/duplicate names).
 async function getOrCreateLibrary(base, H, nameOrId) {
     const want = String(nameOrId).trim();
+    // A numeric id: verify it directly — the paginated list often omits it, which
+    // would otherwise force a brand-new library on every render.
+    if (/^\d+$/.test(want) && await libraryExists(base, H, want))
+        return { id: want, created: false };
     const wantLc = want.toLowerCase();
     const libs = await listLibraries(base, H);
     for (const it of libs)
