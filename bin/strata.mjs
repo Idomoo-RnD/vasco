@@ -55,6 +55,38 @@ function fail(msg, code = 1) {
 
 const apiBase = () => opt('--base', process.env.IDOMOO_API_BASE ?? 'https://usa-api.idomoo.com/api/v3');
 
+// Layers validate as an anyOf of every layer type, so one bad key yields a wall
+// of irrelevant "required"/"additional properties" noise across all branches.
+// Re-validate each layer against ITS OWN type definition to name the real culprit.
+const LAYER_DEF = {
+    text: 'IdmTextLayer', solid: 'IdmSolidLayer', media: 'IdmMediaLayer',
+    audio: 'IdmAudioLayer', camera: 'IdmCameraLayer', composition: 'IdmCompositionLayer',
+};
+function friendlySchemaErrors(doc, ajv, schema) {
+    const cache = {};
+    const validatorFor = name => (cache[name] ??= ajv.compile({ definitions: schema.definitions, $ref: `#/definitions/${name}` }));
+    const out = [];
+    (doc.compositions ?? []).forEach((c, ci) => (c.layers ?? []).forEach((l, li) => {
+        const def = LAYER_DEF[l.type];
+        if (!def) return;
+        const v = validatorFor(def);
+        if (v(l)) return;
+        const where = `comp ${ci} layer ${li}${l.name ? ` "${l.name}"` : ''} (${l.type})`;
+        for (const e of v.errors ?? []) {
+            if (e.keyword === 'additionalProperties')
+                out.push(`${where}: unknown key "${e.params.additionalProperty}" — not valid on a ${l.type} layer; remove it or use a documented key`);
+            else if (e.keyword === 'required')
+                out.push(`${where}: missing required "${e.params.missingProperty}"`);
+            else
+                out.push(`${where}${e.instancePath ? ` ${e.instancePath}` : ''} ${e.message}`);
+        }
+    }));
+    // Not a layer problem (comp-level, assets, animations, effects, masks) — fall
+    // back to raw messages so nothing is hidden.
+    if (!out.length) return [...new Set((ajv.errors ?? []).map(e => `${e.instancePath || '/'} ${e.message}`))];
+    return [...new Set(out)];
+}
+
 function loadAndCompile(scenePath) {
     const abs = resolve(scenePath);
     let scene;
@@ -69,13 +101,15 @@ function loadAndCompile(scenePath) {
     } catch (e) {
         fail(`Compile error: ${e.message}`, /Asset not found/.test(e.message) ? 2 : 1);
     }
-    const ajv = new Ajv({ allowUnionTypes: true });
+    const ajv = new Ajv({ allowUnionTypes: true, allErrors: true });
     if (!ajv.validate(schema, doc)) {
-        const errs = (ajv.errors ?? []).map(e => `${e.instancePath || '/'} ${e.message}`);
+        const errs = friendlySchemaErrors(doc, ajv, schema);
+        const unknownHit = errs.some(e => e.includes('unknown key'));
         if (JSON_MODE) console.error(JSON.stringify({ error: 'schema validation failed', details: errs }));
         else {
             console.error('Schema validation failed on compiled VASCO:');
             for (const e of errs) console.error('  ' + e);
+            if (unknownHit) console.error('  (the VASCO schema is strict — it rejects any key it does not define. See the format reference for each layer\'s allowed keys.)');
         }
         process.exit(1);
     }

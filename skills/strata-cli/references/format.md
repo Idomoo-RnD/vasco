@@ -262,4 +262,13 @@ Graphs are **images, not drawn primitives**. The data-dynamism comes from swappi
 
 ## Raw VASCO passthrough
 
-Any layer/comp key not consumed by the sugar above is copied verbatim into the compiled VASCO — e.g. `is_3d`, `motion_blur`, `placeholder`, `offset_frame`, `track_matte`, `playback_mode`, `duration_referrer`, `baseline`, `field_of_view`, `shutter_angle`. The compiled doc is validated against the official schema (`C:\idomoo\strata_cli\strata_vasco\vasco.schema.json`), so typos are caught before encoding. Use `validate --print` or `compile --vasco` to see the generated VASCO.
+Any layer/comp key not consumed by the sugar above is copied **verbatim** into the compiled VASCO — useful for real VASCO properties the sugar doesn't cover, e.g. `is_3d`, `motion_blur`, `placeholder`, `offset_frame`, `track_matte`, `playback_mode`, `baseline`, `field_of_view`, `shutter_angle`.
+
+⚠️ **This is the #1 source of compile errors.** The VASCO schema is **strict (`additionalProperties: false`)**, so passthrough only works for keys that are *genuinely* VASCO properties. An invented or mistyped key — `z`/`zIndex`, `x`/`y`, `width`/`height` on a layer, `comment`, `id`, `label`, `radius`, `src` on a non-media layer, `font`/`size`/`text` on a non-text layer — is passed through and then **rejected**, failing the compile with `unknown key "…"`. Stick to documented sugar or real VASCO properties.
+
+Each layer type allows only a fixed set of properties (run `strata schema` for the authoritative list). The common ones:
+- **all visual layers:** `bounds`/`box`, `anchor_point`, `transform` (via position/scale/rotation/anchor), `opacity`, `color`, `blend_mode`, `mask_id`, `effect_ids`, `animations`, `motion_blur`, `is_3d`, `first_frame`, `num_of_frames`, `offset_frame`, `placeholder`, `track_matte`, `name`, `type`, `visible`
+- **text adds:** `font_id`/`font`, `font_size`/`size`, `text`, `alignment`/`align`, `tracking`, `leading`, `breakline`, `shrink`, `min_font_size`, `rtl`, `ellipsis`, `styles`, `animators`, `baseline`
+- **media adds:** `asset_id`/`src`, `playback_mode`/`loop`; **camera:** `field_of_view`/`fov`
+
+Verify before encoding: `strata validate scene.json` (offline schema check — names any bad key), or `compile --vasco` / `validate --print` to see the generated VASCO.
