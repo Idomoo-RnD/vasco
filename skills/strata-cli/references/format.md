@@ -24,7 +24,7 @@ Passthrough at comp level: `shutter_angle`, `shutter_phase`, `transition`.
 | key | meaning |
 |---|---|
 | `type` | `text` `image` `video` `solid` `audio` `comp` `camera` (`media` also accepted, type sniffed from extension) |
-| `name` | layer name (needed for matte references) |
+| `name` | layer name — **must be unique** (matte references + personalization key by name; duplicate names are a bug → matte binds the wrong layer, personalization keys collide, render can break). `validate` warns on duplicates. |
 | `start` / `duration` | seconds → `first_frame` / `num_of_frames` (frame-exact keys also accepted). Default: starts at 0, runs to comp end |
 | `box` | `[x, y, w, h]` → bounds. Default: full comp. (visual layers only) |
 | `position` | `[x,y]` or `[x,y,z]` — where the anchor lands (comp coords); defaults to `anchor`, so it's a plain offset when no anchor is set |

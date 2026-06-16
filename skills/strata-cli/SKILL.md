@@ -111,6 +111,8 @@ The CLI creates media via the Idomoo AI API (needs auth; saves to `./strata_asse
 
 Chain: **image → animate into video → narration + music**, then point `src` at the saved files.
 
+**Whenever I generate an image, I ask the user: animate it into a video (image-to-video) or keep it as a still?** I never decide silently — I generate the image, show/point to it, and ask before moving on. Motion usually wins for hero shots and backgrounds (a still that never moves reads as a slideshow), but it's the user's call per image.
+
 ## Workflow
 1. **Sort out assets first.** For each visual element I ask: (a) do they have a file or should I `generate` it, and (b) **still image or moving video** — motion reads as motion-graphics, so I favour video/animated stills for hero moments. I ask about **narration**/music too. Text layers need a real `.ttf`/`.otf`.
 2. **Lock story & shots** (Part 1) and the design (Part 2). Run the concept past the user before heavy building.
@@ -129,6 +131,7 @@ Commands: `compile` · `validate` · `inspect` · `generate image|video|narratio
 - **Known exporter bugs (validate warns on both):**
   - **Styled spans + non-ASCII:** a `styles` span boundary on a multi-byte char (`×`, `€`, accents, CJK, emoji) fails the cloud render (error 3000). Use one full-width span, an ASCII substitute, or keep multi-byte chars out of split spans.
   - **Text in ≥2 sub-comps + images:** if a text layer lives in two or more sub-compositions while the scene uses image/video, the render fails (3000). Put the text in the **main** comp over image-only sub-comps, or keep text in at most one sub-comp.
+- **Layer names must be UNIQUE — duplicate names are a bug.** Two layers sharing a `name` (in the same comp) breaks track-matte resolution (it binds to the first match), collides personalization replacement keys, and can corrupt the render. I give every layer a distinct, meaningful name (`hero_bg`, `title`, `cta`). `validate` warns on duplicates.
 - **Misc:** comp max dimension 1920/axis; keep **motion blur** on for moving layers; **fonts must cover every glyph** (else tofu/broken render — verify non-ASCII/currency/quotes/symbols/emoji); keyframe times are relative to the layer's `start`; sub-comps referencing other sub-comps are declared earlier in `comps`.
 
 ---

@@ -115,7 +115,25 @@ function loadAndCompile(scenePath) {
     }
     for (const w of riskyStyledTextWarnings(scene)) console.error('⚠ ' + w);
     for (const w of riskyPrecompFontWarnings(scene)) console.error('⚠ ' + w);
+    for (const w of duplicateLayerNameWarnings(scene)) console.error('⚠ ' + w);
     return { scene, doc, abs };
+}
+
+// Layer names must be unique within a comp: matte resolution and personalization
+// key by name, so duplicates bind the wrong layer / collide replacement keys.
+function duplicateLayerNameWarnings(scene) {
+    const out = [];
+    const entries = [['main', { layers: scene.layers }]];
+    const comps = scene.comps;
+    if (Array.isArray(comps)) comps.forEach((c, i) => entries.push([String(i), c]));
+    else if (comps && typeof comps === 'object') for (const [n, c] of Object.entries(comps)) entries.push([n, c]);
+    for (const [name, c] of entries) {
+        const seen = new Map();
+        for (const l of c?.layers ?? []) if (l && typeof l.name === 'string') seen.set(l.name, (seen.get(l.name) || 0) + 1);
+        const dups = [...seen.entries()].filter(([, n]) => n > 1).map(([nm, n]) => `"${nm}"×${n}`);
+        if (dups.length) out.push(`comp "${name}" has duplicate layer names (${dups.join(', ')}) — names must be unique (matte/personalization key by name; duplicates are a bug). Rename them.`);
+    }
+    return out;
 }
 
 // Known server-side exporter bug: a per-span `styles` boundary that lands on a
