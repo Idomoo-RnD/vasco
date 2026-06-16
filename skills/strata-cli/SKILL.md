@@ -37,23 +37,23 @@ The `strata` CLI can **create the media an IDM needs** via the Idomoo AI API (ne
 
 Typical chain: **image → animate it into video → add narration + music**, then point the scene's `src` at the saved local files. Full params/output in the *Generating assets* section of [references/format.md](references/format.md).
 
-## 📚 Required reading — read ALL FOUR before writing any scene (do NOT skip)
+## Read the references first — they're what make the output good
 
-**Skipping the references is the #1 cause of broken or amateur videos.** In THIS turn, before you write a single line of scene JSON, use Read on all four `references/` files. They are short, and each prevents a specific, concrete failure — this is not optional and not "only for polished work"; every video benefits:
+The four `references/` files are short, and reading them before you author is the difference between a polished video and a broken or generic one. Each prevents a specific, common failure, so skim all four up front and keep the relevant one open while you work:
 
-| read this | gives you | skip it and you get |
+| reference | what it gives you | what skipping it tends to cause |
 |---|---|---|
-| [references/design-best-practices.md](references/design-best-practices.md) | layout, visual hierarchy, colour, typography, personalization rules | cluttered, off-brand, low-impact frames that bury the message |
-| [references/format.md](references/format.md) | every layer key + the gotchas | invalid schema, **collapsed text** (rich spans), layers **flying to the corner** (anchor/position), tofu glyphs |
-| [references/motion-design.md](references/motion-design.md) | timing, easing vocabulary, entrances/exits, rhythm | flat, lifeless, "default-template" motion |
-| [references/recipes.md](references/recipes.md) | 43 paste-ready, engine-correct patterns | hand-rolling (worse, buggier) what already exists |
+| [references/design-best-practices.md](references/design-best-practices.md) | layout, visual hierarchy, colour, typography, personalization rules | cluttered, off-brand frames that bury the message |
+| [references/format.md](references/format.md) | every layer key plus the gotchas | invalid schema, collapsed rich-text spans, layers jumping to the corner (anchor/position), tofu glyphs |
+| [references/motion-design.md](references/motion-design.md) | timing, easing vocabulary, entrances/exits, rhythm | flat, "default-template" motion |
+| [references/recipes.md](references/recipes.md) | 43 paste-ready, engine-correct patterns | re-deriving (and mis-deriving) patterns that already exist |
 
-Self-check before you compile: if you wrote JSON without having Read all four this turn, **stop and read them now**, then revise. When you present the scene/plan, cite which design principle and which format rule informed your key choices — that proves the references were applied.
+A good habit that keeps this honest: when you present the scene or plan, note which design principle and which format rule shaped your main choices.
 
 ## Workflow
 
-1. **ASK ABOUT ASSETS FIRST — this is a required gate, do not skip it.** Before writing any scene, ask the user, for each kind of media the video needs (images, video clips, audio/music): *do they already have a file, or should I generate it with `strata generate`?* Collect file paths for anything they have; plan a `generate` call for anything they don't. Only skip the question when the user already specified every asset or explicitly told you to generate/use placeholders. Text layers REQUIRE a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
-2. Understand what video the user wants (size, duration, layers, motion). **Apply the design principles from the Required reading** (hierarchy/stamp test, F-pattern, contrast, ≤2 typefaces, colour, dark scrims over dynamic images, timing the personalized reveal) — let them drive layout, hierarchy, and type choices.
+1. **Sort out assets before authoring** — building a scene around media you haven't resolved leads to rework. For each kind of media the video needs (images, video clips, audio/music), ask the user whether they already have a file or want you to generate it with `strata generate`. Collect file paths for what they have; plan a `generate` call for what they don't. You can skip the question only when the user already specified every asset or told you to generate/use placeholders. Text layers need a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
+2. Understand what video the user wants (size, duration, layers, motion). **Apply the design principles from the references** (hierarchy/stamp test, F-pattern, contrast, ≤2 typefaces, colour, dark scrims over dynamic images, timing the personalized reveal) — let them drive layout, hierarchy, and type choices.
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
 4. Compile: `strata compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
 5. To render an MP4: `strata render scene.json --library "<saved-lib-id>" -o out.mp4`.
@@ -93,7 +93,7 @@ Times are **seconds** (use `f` instead of `t` in keyframes for exact frames). Co
 }
 ```
 
-⚠️ **The block above is a teaser, not the spec.** Do not author from it alone — the full keys and the failure-causing gotchas (anchor↔position, glyph coverage, rich-text spans must cover spaces) live in `references/format.md`, which you must Read first (see Required reading).
+Note: the block above is a teaser, not the spec — author from `references/format.md`, which has the full keys and the failure-causing gotchas (anchor↔position, glyph coverage, rich-text spans must cover spaces).
 
 Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition), `camera`.
 
@@ -101,7 +101,7 @@ Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition
 
 **Design best practices** — read [references/design-best-practices.md](references/design-best-practices.md) **before creating any animation**. Idomoo's design principles for clear, attention-holding, on-brand personalized video: space & "less is more", visual hierarchy (stamp test), F-pattern & rule of thirds, contrast/proximity/alignment/consistency, colour, disciplined typography (≤2 typefaces, fallback fonts), plus PV/personalization rules (dark scrim over dynamic images, define bounding box + shrink/break-line, time the personalized reveal, hold the ending) and a pre-ship checklist.
 
-**Full reference** — read [references/format.md](references/format.md) before writing ANY scene (see Required reading). It covers every layer type's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + shape morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough escape hatch.
+**Full reference** — [references/format.md](references/format.md) is the authoritative spec for every scene. It covers every layer type's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + shape morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough escape hatch.
 
 **Motion design** — for any video with motion (i.e. all of them), read [references/motion-design.md](references/motion-design.md). It's a pro-level craft guide grounded in this engine: timing & spacing, the easing vocabulary (which ease for which feel), entrances/exits, kinetic text, beat transitions, effects with intent, depth/camera/atmosphere, rhythm to audio, polish details, anti-patterns, and drop-in keyframe recipes.
 
