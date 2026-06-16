@@ -240,6 +240,18 @@ class Compiler {
             if (l.align !== undefined) { out.alignment = parseAlign(l.align); handled.add('align'); }
             if (l.color !== undefined) { out.color = color(l.color, 3); handled.add('color'); }
             if (l.styles !== undefined) {
+                // The exporter indexes styled-span ranges by UTF-8 BYTE offset, not
+                // character — authoring is in characters, so convert here. No-op for
+                // ASCII; for multi-byte text (é, ×, 你好, emoji) this stops the span
+                // from splitting mid-codepoint, which otherwise crashes the export.
+                const cps = typeof l.text === 'string' ? [...l.text] : null;
+                const toBytes = (start, length) => {
+                    if (!cps || start == null || length == null) return [start, length];
+                    return [
+                        Buffer.byteLength(cps.slice(0, start).join(''), 'utf8'),
+                        Buffer.byteLength(cps.slice(start, start + length).join(''), 'utf8'),
+                    ];
+                };
                 out.styles = l.styles.map(s => {
                     const st = { ...s };
                     if (st.font) { st.font_id = this.assetId(st.font, 'font'); delete st.font; }
@@ -247,6 +259,7 @@ class Compiler {
                     if (st.size !== undefined) { st.font_size = st.size; delete st.size; }
                     if (st.color !== undefined) st.color = color(st.color, 3);
                     if (typeof st.highlight === 'string') st.highlight = hexToColor(st.highlight, 4);
+                    [st.start, st.length] = toBytes(st.start, st.length);
                     return st;
                 });
                 handled.add('styles');

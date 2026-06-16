@@ -113,7 +113,6 @@ function loadAndCompile(scenePath) {
         }
         process.exit(1);
     }
-    for (const w of riskyStyledTextWarnings(scene)) console.error('⚠ ' + w);
     for (const w of riskyPrecompFontWarnings(scene)) console.error('⚠ ' + w);
     for (const w of duplicateLayerNameWarnings(scene)) console.error('⚠ ' + w);
     return { scene, doc, abs };
@@ -132,30 +131,6 @@ function duplicateLayerNameWarnings(scene) {
         for (const l of c?.layers ?? []) if (l && typeof l.name === 'string') seen.set(l.name, (seen.get(l.name) || 0) + 1);
         const dups = [...seen.entries()].filter(([, n]) => n > 1).map(([nm, n]) => `"${nm}"×${n}`);
         if (dups.length) out.push(`comp "${name}" has duplicate layer names (${dups.join(', ')}) — names must be unique (matte/personalization key by name; duplicates are a bug). Rename them.`);
-    }
-    return out;
-}
-
-// Known server-side exporter bug: a per-span `styles` boundary that lands on a
-// multi-byte (non-ASCII) character fails cloud render with the opaque error 3000
-// (the exporter treats the character offsets as byte offsets and splits mid-UTF-8).
-// validate/compile pass locally, so warn here before a render is wasted.
-function riskyStyledTextWarnings(scene) {
-    const out = [];
-    const layerArrays = [scene.layers];
-    const comps = scene.comps;
-    if (Array.isArray(comps)) for (const c of comps) layerArrays.push(c?.layers);
-    else if (comps && typeof comps === 'object') for (const c of Object.values(comps)) layerArrays.push(c?.layers);
-    for (const layers of layerArrays) {
-        for (const l of layers ?? []) {
-            if (l?.type !== 'text' || !Array.isArray(l.styles) || !l.styles.length || typeof l.text !== 'string') continue;
-            if (!/[^\x00-\x7F]/.test(l.text)) continue;                 // pure ASCII — safe
-            const cl = [...l.text].length;
-            const s0 = l.styles[0];
-            const singleFull = l.styles.length === 1 && (s0.start ?? 0) === 0 && (s0.length ?? cl) === cl;
-            if (singleFull) continue;                                   // one full-width span — safe
-            out.push(`text layer "${l.name ?? '?'}": styled span(s) over non-ASCII text (${JSON.stringify(l.text)}) — Idomoo's exporter currently FAILS render (error 3000) when a span boundary falls on a multi-byte character. Fix: use one span over the whole string, substitute an ASCII char (e.g. "x" for "×"), or keep multi-byte characters out of split spans.`);
-        }
     }
     return out;
 }

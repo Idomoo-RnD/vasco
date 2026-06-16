@@ -1,3 +1,3 @@
-export const VERSION = '1.0.21';
+export const VERSION = '1.0.22';
 export const REPO = 'https://github.com/Idomoo-RnD/vasco';
 export const RAW = 'https://raw.githubusercontent.com/Idomoo-RnD/vasco/main';
