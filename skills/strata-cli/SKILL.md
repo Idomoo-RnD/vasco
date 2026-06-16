@@ -40,7 +40,7 @@ Typical chain: **image → animate it into video → add narration + music**, th
 ## Workflow
 
 1. **ASK ABOUT ASSETS FIRST — this is a required gate, do not skip it.** Before writing any scene, ask the user, for each kind of media the video needs (images, video clips, audio/music): *do they already have a file, or should I generate it with `strata generate`?* Collect file paths for anything they have; plan a `generate` call for anything they don't. Only skip the question when the user already specified every asset or explicitly told you to generate/use placeholders. Text layers REQUIRE a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
-2. Understand what video the user wants (size, duration, layers, motion).
+2. Understand what video the user wants (size, duration, layers, motion). **Before designing anything, read [references/design-best-practices.md](references/design-best-practices.md)** — Idomoo's design principles (space, hierarchy/stamp test, F-pattern, rule of thirds, contrast, ≤2 typefaces, colour, and personalization rules like dark scrims over dynamic images and timing the personalized reveal). Let these drive layout, hierarchy, and type choices.
 3. Write a scene JSON (compact format below). Use paths relative to the scene file (or absolute paths) for all assets.
 4. Compile: `strata compile scene.json -o out.idm` — it validates the compiled VASCO against the official schema before writing and prints a summary. Report the output path.
 5. To render an MP4: `strata render scene.json --library "<saved-lib-id>" -o out.mp4`.
@@ -83,6 +83,8 @@ Times are **seconds** (use `f` instead of `t` in keyframes for exact frames). Co
 Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition), `camera`.
 
 **Tween engine:** any `animate` channel is a keyframe list `{"t": sec, "v": value, "ease": name}`; the CLI bakes them to per-frame VASCO arrays. `position`/`scale`/`rotation` (degrees)/`anchor` compose into the transform matrix; `opacity`, `color`, `visible`, and any raw VASCO channel bake directly. Easings: `linear`, `hold`, `in/out/inOut` × `Quad Cubic Quart Quint Sine Expo Circ Back Elastic Bounce`, or cubic-bezier `[x1,y1,x2,y2]`.
+
+**Design best practices** — read [references/design-best-practices.md](references/design-best-practices.md) **before creating any animation**. Idomoo's design principles for clear, attention-holding, on-brand personalized video: space & "less is more", visual hierarchy (stamp test), F-pattern & rule of thirds, contrast/proximity/alignment/consistency, colour, disciplined typography (≤2 typefaces, fallback fonts), plus PV/personalization rules (dark scrim over dynamic images, define bounding box + shrink/break-line, time the personalized reveal, hold the ending) and a pre-ship checklist.
 
 **Full reference** — read [references/format.md](references/format.md) before writing any non-trivial scene. It covers every layer type's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + shape morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough escape hatch.
 
