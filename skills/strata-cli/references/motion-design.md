@@ -12,6 +12,9 @@ Contents: [Mindset](#1-mindset--concept-first) · [Timing & spacing](#2-timing--
 - **Motion serves meaning.** Every move should direct attention, show a relationship, or express brand personality — never decorate for its own sake. Energetic brand → snappier eases and overshoots; premium/luxury → slow `inOutSine`/`outExpo`, lots of negative space, restraint.
 - **Read time is real.** A line of text needs time on screen ≈ 0.5s + ~0.3s per word after it finishes animating in. Don't animate out before it can be read.
 - **Design the whole arc.** Intro (set tone) → body beats (escalate) → climax (biggest move/stat) → resolve (logo/CTA). Vary energy: a quiet beat makes the next loud one hit harder.
+- **Motion graphics, not PowerPoint.** The whole frame should feel alive — elements enter and leave on eased motion, backgrounds drift or parallax, the camera gently breathes. Static slides joined by hard cuts, with nothing moving in between, read as a slideshow. If a beat has nothing in motion, add a slow push-in, a parallax drift, or a continuous accent so it stays cinematic.
+- **Keep motion blur on.** It's on by default for every visual layer — leave it on for anything that moves; it's a big part of what separates rendered motion graphics from stuttery keyframes. Disable it only deliberately (e.g. a crisp UI readout), and raise the comp `shutter_angle` (1–1.3) for fast moves.
+- **Don't loop a finished video.** When a clip ends, cut or transition to a *different* shot rather than replaying it — a visibly looping clip looks cheap. Reserve looping for genuinely seamless ambient textures; use `playback_mode: "hold"` to settle on the last frame.
 
 ## 2. Timing & spacing (the soul)
 

@@ -109,6 +109,8 @@ Animator offsets (`opacity`, `position`, `scale`, `rotation`, `color`, `tracking
 
 `loop: true|false` → `playback_mode` loop/cut (or pass `playback_mode`: `cut loop hold`). Extensions sniffed: png/jpg/jpeg/webp/bmp/gif/tif → image; mp4/mov/avi/webm/mkv/m4v → video.
 
+**Don't loop a clip to fill time.** A clip that restarts mid-scene reads as a glitchy GIF — the visible jump back to frame one looks cheap. Prefer to size the scene to the clip, or when one clip ends **cut/transition to a different shot** rather than replaying the same one. Use `playback_mode: "hold"` to freeze on the last frame instead of looping, and reserve `loop: true` for genuinely seamless ambient textures (subtle particles, gradients).
+
 ## Solid
 
 ```json
