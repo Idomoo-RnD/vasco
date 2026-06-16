@@ -221,7 +221,7 @@ async function isSeaBinary() {
 // dir differs per agent. `idm-cli`/`idm-maker` are legacy names — migrate on touch.
 const SKILL_NAME = 'strata-cli';
 const LEGACY_SKILL_NAMES = ['idm-cli', 'idm-maker'];
-const SKILL_FILES = ['SKILL.md', 'references/video-design.md', 'references/design-best-practices.md', 'references/format.md', 'references/motion-design.md', 'references/recipes.md'];
+const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/recipes.md'];
 
 // Load the skill files: prefer the repo checkout (dev — instant, offline), else
 // fetch the published copy from main (SEA binary has no bundled skills/).

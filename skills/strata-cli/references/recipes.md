@@ -1,6 +1,6 @@
 # Recipe library — drop-in keyframe patterns
 
-43 ready-to-use motion-design recipes in the **compact scene format**. Each snippet is one (or a few) layers — paste into a scene's `layers`, swap the font/box/colours, and tune the timing. Times are **seconds**; coordinates assume a 1280×720 comp (scale to your size). Read [motion-design.md](motion-design.md) for the craft theory behind these.
+43 ready-to-use motion-design recipes in the **compact scene format**. Each snippet is one (or a few) layers — paste into a scene's `layers`, swap the font/box/colours, and tune the timing. Times are **seconds**; coordinates assume a 1280×720 comp (scale to your size). The craft theory behind these (shots, easing, 3D/camera, rhythm) lives in the main SKILL.md.
 
 **Conventions used below**
 - `"./font.ttf"` — any real `.ttf`/`.otf`. `"./image.jpg"` — your media.

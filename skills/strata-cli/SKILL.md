@@ -1,139 +1,138 @@
 ---
 name: strata-cli
-description: Author Idomoo IDM videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make a strata video, make/build/compile an IDM, create a video template as .idm, build a motion-graphics / kinetic-text / title-sequence / explainer / personalized or data-driven video, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+description: Author cinematic, creative motion-design videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. VASCO is a full 3D engine: 3D layers, a real camera, depth, masks, effects, per-character text animators. Use when the user asks to make a strata video, make/build/compile an IDM, create a video template as .idm, build a motion-graphics / kinetic-text / title-sequence / explainer / promo / personalized or data-driven video, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
 ---
 
-# Strata CLI — author, generate assets, compile & render IDM videos
+# Strata CLI — cinematic motion design, authored as IDM/VASCO
 
-I drive the `strata` CLI end to end: I turn a short "scene" JSON into a full VASCO project, generate any missing media (image / image-to-video / narration / music), compile it to a binary `.idm` entirely locally, and render it to an MP4 on Idomoo.
+I make **bold, cinematic, story-driven motion graphics** — not slideshows. VASCO is a real **3D motion-design engine**: 3D layers with depth, a moving **camera**, masks, effects, per-character text animators, and a keyframe tween engine. I use that power. My default is *great*: deliberate shots, alive frames, motion with meaning. This skill is the craft; the references are the syntax (`format.md`) and drop-in patterns (`recipes.md`).
 
-## Animation & design principles I follow
+---
 
-Good output is a story told with motion, not a slideshow. I settle the story before I touch the scene JSON, then I author to these (the full concept layer is in [references/video-design.md](references/video-design.md); execution craft in [references/motion-design.md](references/motion-design.md); layout in [references/design-best-practices.md](references/design-best-practices.md)):
+# PART 1 — How I make great video (this is the job)
 
-- **Story first.** I work out the arc, the key tension, and the single message each beat must land — and I run the concept past the user *before* I build. A beat is ~1.5–4s with one job (hook → value → proof → CTA).
-- **Disney fundamentals.** Anticipation, ease in/out, follow-through & overlap, squash & stretch, exaggeration. I never move anything linearly unless I mean to.
-- **Establishing shot, then push in.** I open wide to set the scene, then hard-cut or zoom to the action. I show rather than tell — titles/captions only when they earn their place.
-- **Keep it in a real context.** Elements live in a setting — a background, a device/UI frame, a product shot — not floating in the void.
-- **Decide the shot.** A slow push-in, rapid cuts between two elements in tension, a move that follows a cursor or a graph line — I pick a deliberate camera/edit for every beat.
-- **Always keep something in motion.** Except for a deliberate held beat, something is panning, zooming, drifting, or building. A truly static frame reads as a bug, so I give images a slow Ken-Burns (scale + position) and build graphics over them. (Motion graphics, not PowerPoint.)
-- **Let it breathe.** I hold text and images for read time (≈0.5s + ~0.3s per word) before moving on, and I never animate something out before it can be read.
-- **Camera & cursor moves.** I use a `camera` layer (or Ken-Burns scale+position on a layer) for pushes/pans; for a product walkthrough I animate a cursor image layer along keyframed positions with eased, damped motion (Screen-Studio style). I compute target pixel positions from the layout — there are no live refs in the IDM engine.
+## Story & concept first
+- **Find the arc.** Beginning → tension → resolution. Every piece, even 8 seconds, has one. I name the single message the viewer should leave with — if I can't say it in a sentence, it's not ready.
+- **Find the tension.** Product vs. the old way, user vs. friction, before vs. after. Tension holds attention.
+- **Align before building.** I run the concept past the user first — re-cutting an idea is cheap, re-rendering a finished video is not.
+- **One idea per beat.** A beat is ~1.5–4s with a single job (hook → value → proof → CTA). If two things fight for the eye, I stagger them.
+
+## Think in shots (cinematography)
+A scene is a sequence of deliberate shots. For each beat I decide the shot:
+- **Establishing → push in.** Open wide to set the world, then move in on the action. Show, don't tell — titles only when they beat pictures.
+- **Hard cut / rapid intercut** between two things in tension.
+- **Follow shot** that tracks a cursor, a graph line, a character, a product as it moves.
+- **Reveal** that builds an image or layout piece by piece.
+- **Vary the shots** — sameness kills attention. And **keep it in a real context** (a desk, a phone UI, a place); elements floating in the void read as unfinished.
+
+## 3D & camera — VASCO's superpower (use it)
+This is what separates a flat template from a film. VASCO layers can be 3D and there's a real camera:
+- **`is_3d: true`** on layers + a **`camera`** layer (`fov`/`field_of_view`, animated `position`/`zoom`/`rotation`) → genuine dollies, push-ins, orbits, rack-focus feel.
+- **Parallax with depth:** give layers different **z** (third value in `position`/`anchor`, e.g. `[960,540,-400]`) and move the camera — near and far layers drift at different rates. Instant cinematic depth.
+- **Camera moves, not layer moves:** when several elements should travel together, move the **camera** (or a parent comp), not each layer. A slow camera push under a settling title reads premium.
+- **3D card flips / space:** rotate 3D layers on X/Y for flips and turns; stage elements in depth so a push-in travels *through* them.
+- See the **Camera** and **3D** keys in `format.md`. Reach for depth/camera whenever a beat feels flat.
+
+## Keep every frame alive
+- **Something is always moving.** Except a deliberate held beat, the camera, an element, or a transition is in motion — drift, zoom, build. A truly static frame reads as a bug.
+- **Images are never still.** Every photo/still gets a slow **Ken-Burns** (scale + position on an anchored layer) or graphics building over it.
+- **Let it breathe.** I hold text/images for read time (~0.5s + ~0.3s per word) before moving on, and never animate out before it can be read. Pacing is a feature, not dead air.
+
+## Motion principles (the fundamentals)
+- **Disney basics:** anticipation (wind up before the move), **ease in/out** (nothing starts/stops instantly), follow-through & overlap (parts trail and settle), squash & stretch, exaggeration (push past literal for life), staging (compose so the eye lands where I want).
+- **Timing is *when*; spacing is *how* the value distributes across the move (the easing).** Amateurs leave timing uniform and motion linear; I vary both.
+- **Easing vocabulary** (which feel for which job):
+  - `outCubic` / `outQuart` — confident UI/text settle (decelerate in).
+  - `outBack` — playful overshoot for entrances (use sparingly).
+  - `outExpo` — fast, premium snap that glides to rest.
+  - `inOutSine` / `inOutCubic` — smooth drifts, Ken-Burns, camera.
+  - `outElastic` / `outBounce` — toy-like; only when the brand is energetic.
+  - `linear` only for continuous loops/conveyors; `hold` to freeze between keys.
+  - Or a cubic-bezier `[x1,y1,x2,y2]` for a custom curve.
+
+## Kinetic typography
+- **Per-character / per-word animators** make text feel alive — words rise & fade in, letters track in, cascades. Use `animators` with `ranges` (`based_on: words|characters|lines`, `shape: ramp_up|…`); prefer **percentage** range units so any string length cascades correctly. (Syntax in `format.md` Text; copy from `recipes.md`.)
+- **Type with intent:** big where it matters, generous tracking for labels, tight for impact. Animate the meaning (a number counts up; a key word punches in).
+
+## Transitions between beats
+- **Match-cut / continuity:** carry a shape, colour, or motion vector across the cut so beats feel connected.
+- **Whip-pan, light-leak, iris/clock wipe, scale-through** — use a transition with intent, not as decoration. (Recipes available.)
+- Cutting on a **camera move** or an audio beat hides the seam and feels designed.
+
+## Depth, light & atmosphere
+- Layer **glow / shadow / blur / overlays** for depth and mood; a subtle vignette (feathered ellipse mask) focuses the eye. Grade with a colour overlay for a coherent look.
+- **Motion blur is on by default** — it's a big part of what reads as rendered-not-stuttery. Keep it on for moving layers; raise comp `shutter_angle` (1–1.3) for fast moves.
+
+## Rhythm & continuity
+- **Cut/hit to the audio.** If there's narration or music, land key moves on beats and size each scene to the **narration's returned duration** (TTS reports it). Transitions ~0.3–0.5s between clips.
+- **Vary energy:** a quiet beat makes the next loud one hit harder. Design the whole arc: intro (tone) → body (escalate) → climax (biggest move/stat) → resolve (logo/CTA).
+
+## Polish & anti-patterns
+- **Polish:** nothing moves linearly; entrances overshoot or settle, never pop; text has read time; elements have weight (ease + follow-through); one clear focal point per frame.
+- **Amateur tells I avoid:** everything fades in the same way at the same time; centered static text on a static frame; linear motion; clutter with no hierarchy; looping a clip to fill time (a visible loop reads cheap — cut to a different shot or `playback_mode: "hold"`); decorative motion with no meaning.
+
+## Craft check (before I call it done)
+After render I look at the poster (or extract a frame) — compile success ≠ good frame — and ask:
+- Is the **message** unmistakable? Does **every shot** earn its place?
+- Is there a moment of **stillness** *and* a moment of **energy**?
+- Does the **pacing** let the key beats land? Would the **first three seconds** make someone keep watching?
+- Is something always moving; do images move; is there depth/camera where the frame felt flat?
+
+---
+
+# PART 2 — Design & layout (so it reads clean and on-brand)
+- **Visual hierarchy / stamp test:** glance at the frame — what did I see first? If it isn't the most important thing, I fix size/contrast/colour/placement. Product + CTA win the first glance.
+- **Composition:** F-pattern (top-left draws the eye) and rule of thirds — key elements on the thirds, not dead center. Give content **space**; "less is more" reads premium; "don't shout."
+- **Proximity / alignment / consistency:** group related things, align cleanly, commit to a small style set and repeat it.
+- **Typography:** **≤2 typefaces** — vary weight/size/colour for emphasis, not new fonts. Define fallback fonts; the font must cover every glyph used.
+- **Colour:** set emotional tone, apply brand colours consistently. The same scene reads completely differently by colour treatment.
+- **Safe areas:** keep text within ~90% title-safe; reserve a lower band for captions; don't collide layers or overflow the frame; avoid the player chrome.
+- **Over dynamic images:** drop a **transparent dark scrim** under text so it stays legible whatever image arrives.
+- **Personalization (Idomoo's core):** every layer is an API-replaceable placeholder keyed by its **name**. Size text boxes for longer/shorter values (keep `shrink`, sensible `min_size`, deliberate alignment); use `fit:"fill"` for full-bleed media slots; per-character animators adapt to any string. Time the personalized reveal **early but not at t=0** (videos start muted). Treat graphs as swappable images whose animation reveals whatever data the image carries. (Details in `format.md`.)
+
+---
+
+# PART 3 — Operating the CLI
 
 ## Setup — I check BEFORE installing anything
+The `strata` CLI is a **standalone self-contained binary** (embeds its own runtime — I never install Node/npm for it).
+1. **Check first:** `strata version`. If it prints, skip setup. Also try `~/.local/bin/strata` (Unix) and `%LOCALAPPDATA%\Programs\strata\strata.exe` (Windows).
+2. **Only if missing:** Linux/macOS `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (set `STRATA_SKILL=skip` in agents); Windows `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`; or grab a binary from the releases page and run by path.
 
-The `strata` CLI is a **standalone self-contained binary** that embeds its own JavaScript runtime — I **never install Node.js, npm, or any other runtime for it**.
-
-1. **I check first**: I run `strata version`. If it prints a version, the CLI is ready and I skip all setup. I also try `~/.local/bin/strata version` (Linux/macOS) and `%LOCALAPPDATA%\Programs\strata\strata.exe version` (Windows) in case it is installed but not on PATH.
-2. **Only if it's missing** do I install the binary:
-   - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.sh | bash` (in sandboxes/agents I set `STRATA_SKILL=skip` to suppress the interactive skill prompt)
-   - Windows: `irm https://raw.githubusercontent.com/Idomoo-RnD/vasco/main/scripts/install.ps1 | iex`
-   - Or I download the platform binary directly from https://github.com/Idomoo-RnD/vasco/releases/latest (`strata_linux_amd64`, `strata_linux_arm64`, `strata_darwin_arm64`, `strata_darwin_amd64`, `strata_windows_amd64.exe`), `chmod +x` it, and run it by path.
-3. **I confirm it works** (offline, no assets/credentials — exit 0 means the toolchain is good):
-
-   ```bash
-   strata version
-   echo '{"width":1280,"height":720,"fps":25,"duration":1,"layers":[{"type":"solid","color":"#102040"}]}' > /tmp/t.json
-   strata validate /tmp/t.json
-   ```
-
-## 🎨 I generate assets — I don't make the user supply everything
-
-The `strata` CLI creates the media an IDM needs via the Idomoo AI API (needs auth; saves files to a folder, default `./strata_assets/`). I don't assume the user must hand me every image/clip/voiceover:
+## I generate assets — I don't make the user supply everything
+The CLI creates media via the Idomoo AI API (needs auth; saves to `./strata_assets/`):
 
 | command | makes |
 |---|---|
 | `strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>]` | a still PNG (async) |
-| `strata generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** MP4 clip from a still (async) |
-| `strata generate narration "<text>" --voice <voice_id>` | a TTS voiceover MP3 (`strata generate voices` lists voice IDs) |
-| `strata generate music "<prompt>" [--duration 30]` | an instrumental soundtrack |
+| `strata generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** clip from a still (async) |
+| `strata generate narration "<text>" --voice <voice_id>` | TTS voiceover MP3 (`strata generate voices` lists ids) |
+| `strata generate music "<prompt>" [--duration 30]` | an instrumental track |
 
-Typical chain: **image → animate it into video → add narration + music**, then I point the scene's `src` at the saved local files. Full params/output are in the *Generating assets* section of [references/format.md](references/format.md).
-
-## I read the references first — they're what make the output good
-
-The four `references/` files are short, and reading them before I author is the difference between a polished video and a broken or generic one. Each prevents a specific, common failure, so I skim all four up front and keep the relevant one open while I work:
-
-| reference | what it gives me | what skipping it tends to cause |
-|---|---|---|
-| [references/video-design.md](references/video-design.md) | the concept layer — story, shots, pacing, animation craft | a tool-driven slideshow with no arc, message, or shot logic |
-| [references/design-best-practices.md](references/design-best-practices.md) | layout, visual hierarchy, colour, typography, personalization rules | cluttered, off-brand frames that bury the message |
-| [references/format.md](references/format.md) | every layer key plus the gotchas | invalid schema, collapsed rich-text spans, layers jumping to the corner (anchor/position), tofu glyphs |
-| [references/motion-design.md](references/motion-design.md) | timing, easing vocabulary, entrances/exits, rhythm | flat, "default-template" motion |
-| [references/recipes.md](references/recipes.md) | 43 paste-ready, engine-correct patterns | re-deriving (and mis-deriving) patterns that already exist |
-
-To keep myself honest: when I present the scene or plan, I note which design principle and which format rule shaped my main choices.
+Chain: **image → animate into video → narration + music**, then point `src` at the saved files.
 
 ## Workflow
+1. **Sort out assets first.** For each visual element I ask: (a) do they have a file or should I `generate` it, and (b) **still image or moving video** — motion reads as motion-graphics, so I favour video/animated stills for hero moments. I ask about **narration**/music too. Text layers need a real `.ttf`/`.otf`.
+2. **Lock story & shots** (Part 1) and the design (Part 2). Run the concept past the user before heavy building.
+3. **Write the scene JSON** (compact format — `format.md` is the spec). Reusable sub-comps for repeated elements; iterate the timeline.
+4. **Validate, then compile:** `strata validate scene.json` (free, offline — names any bad key/layer and warns about the known exporter traps) → `strata compile scene.json -o out.idm`.
+5. **Render:** `strata render scene.json --library "<id>" -o out.mp4`.
+   - **Library — pick ONE and reuse it.** First time: ask once, `strata library create "<name>"` → save the printed **id** (persist it, e.g. a `.idm-library` file). Every later render passes that same `--library <id>`; it logs `Reusing library <id>` (if it logs `Created NEW library` I passed the wrong value). Switch only when the user says so.
+   - Renders take minutes — I run them in the **background** and report the `video_url`/`poster_url`.
+6. **Verify** (craft check above). Debug with `--vasco` or `strata inspect out.idm`.
 
-1. **I sort out assets before authoring** — building a scene around media I haven't resolved leads to rework. For each visual element I ask the user two things: (a) do they have a file or should I generate it with `strata generate`, and (b) should it be a **still image or a moving video clip** — motion reads as motion-graphics rather than slides, so I favour video (or at least an animated still) for hero moments. I also ask whether to add **narration** (and music). I collect file paths for what they have and plan `generate` calls for the rest. I skip the questions only when the user already specified everything or told me to generate/use placeholders. Text layers need a real `.ttf`/`.otf` — a generated/placeholder font is a last resort.
-2. **I lock the story and design.** I work out what the video must say (size, duration, beats, motion) and apply the principles above plus the references (hierarchy/stamp test, F-pattern, contrast, ≤2 typefaces, colour, dark scrims over dynamic images, timing the personalized reveal). I run the concept past the user before building anything heavy.
-3. **I write the scene JSON** (compact format below), using paths relative to the scene file (or absolute paths) for all assets. I make reusable sub-comps for repeated elements and tweak the timeline iteratively.
-4. **I compile**: `strata compile scene.json -o out.idm` — it validates the compiled VASCO against the schema before writing and prints a summary. I report the output path.
-5. **I render an MP4**: `strata render scene.json --library "<saved-lib-id>" -o out.mp4`.
-   - **Credentials**: I ask the user for their **account ID** and **secret key** if `strata auth status` fails, then set them via `strata auth login --account <id> --token <secret>` or env `IDOMOO_ACCOUNT_ID`/`IDOMOO_SECRET_KEY`.
-   - **Library — I pick ONE and reuse it (I do not create a new library per IDM).** Every render in a project/session uploads to the **same** library; a fresh library per upload scatters renders and is bad practice.
-     - **First render only:** I ask the user **once** which library to use (showing existing ones with `strata library list`), then create/resolve it with `strata library create "<name>"`. That prints the library **id** and is idempotent (it reuses the id if one with that name/id already exists). I **save that id** for the session and persist it for the project (a small `.idm-library` file next to the scenes).
-     - **Every later render:** I pass that same `--library <saved-id>` (the **id**, not a name) without asking again. `render` logs `Reusing library <id>`; if it ever logs `Created NEW library <id>` I passed the wrong value. I only switch libraries when the user explicitly says so.
-     - Without `--library`, a non-interactive render fails with the library list in the error.
-   - A render takes minutes (upload → export → render, polled), so I run it in the background and report the printed video/poster URLs.
-6. **I verify the result.** After render I look at the poster (or extract a frame) — compile success doesn't prove the frame is right. I run the craft check from [references/video-design.md](references/video-design.md): is the message unmistakable, does every shot earn its place, is there both stillness and energy, does the pacing let beats land, would the first three seconds keep someone watching? I debug with `--vasco` (dumps compiled VASCO JSON) or `strata inspect out.idm` (decodes a binary back).
+Commands: `compile` · `validate` · `inspect` · `generate image|video|narration|music|voices` · `render --library <id>` · `library list|create` · `init` · `auth login|status` · `schema` · `update` · `uninstall`. Add `--json` for machine-readable output (errors on stderr; nothing reads a TTY non-interactively). Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
 
-Commands (a bare `.json` arg implies `compile`, a bare `.idm` implies `inspect`):
-`compile <scene.json> [-o out.idm] [--vasco]` · `validate <scene.json> [--print]` · `inspect <file.idm> [--assets <dir>]` · `generate image|video|narration|music|voices ...` · `render <scene.json|.idm> --library <id> [-o out.mp4] [--height] [--quality]` · `library list|create <name>` · `init [scene.json]` · `auth login|status` · `schema` · `update` · `uninstall`. I add `--json` for machine-readable output. Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
+## Technical must-knows (the traps)
+- **`anchor` + `position` — the #1 bug.** Once an `anchor` is set, `position` is the **absolute comp point where that pivot lands**, not an offset (it defaults to the anchor). To scale/rotate in place AND move, write every position keyframe as **anchor + offset** with the resting keyframe equal to the anchor. ❌ `anchor:[960,540]` + `position:[[0,40]→[0,0]]` flies to the corner. ✅ `position:[[960,580]→[960,540]]` rises into place. No pivot needed? Omit `anchor` and `position` is a plain offset.
+- **Verify before render:** `strata validate` schema-checks offline and **names the offending key** — the strict VASCO schema rejects any key it doesn't define (no inventing `z`/`x`/`y`/`width`/`comment`/`radius`/`src`-on-text). Fix until clean.
+- **Known exporter bugs (validate warns on both):**
+  - **Styled spans + non-ASCII:** a `styles` span boundary on a multi-byte char (`×`, `€`, accents, CJK, emoji) fails the cloud render (error 3000). Use one full-width span, an ASCII substitute, or keep multi-byte chars out of split spans.
+  - **Text in ≥2 sub-comps + images:** if a text layer lives in two or more sub-compositions while the scene uses image/video, the render fails (3000). Put the text in the **main** comp over image-only sub-comps, or keep text in at most one sub-comp.
+- **Misc:** comp max dimension 1920/axis; keep **motion blur** on for moving layers; **fonts must cover every glyph** (else tofu/broken render — verify non-ASCII/currency/quotes/symbols/emoji); keyframe times are relative to the layer's `start`; sub-comps referencing other sub-comps are declared earlier in `comps`.
 
-**Agent conventions:** `--json` puts a machine-readable result object on stdout; errors are JSON on stderr. The CLI is non-interactive by default — with credentials in env and `--library` passed, nothing reads a TTY. Renders take minutes, so I run them in the background (the result JSON has `video_url` and `poster_url`).
+---
 
-## Scene format essentials
-
-Times are **seconds** (I use `f` instead of `t` in keyframes for exact frames). Colors are hex strings. Coordinates are pixels, origin top-left. Layers render **bottom-first** (first layer = background). Asset paths resolve relative to the scene file.
-
-```json
-{
-  "width": 1280, "height": 720, "fps": 25, "duration": 4,
-  "layers": [
-    { "type": "image", "name": "bg", "src": "./bg.jpg",
-      "anchor": [640, 360],
-      "animate": { "scale": [ {"t": 0, "v": 1}, {"t": 4, "v": 1.15, "ease": "inOutSine"} ] } },
-    { "type": "text", "name": "title", "text": "Hello!",
-      "font": "./font.ttf", "size": 110, "color": "#ffe14d",
-      "box": [100, 120, 1080, 220], "align": "center middle",
-      "effects": [ { "type": "shadow", "color": "#000000cc", "distance": 12 } ],
-      "animate": {
-        "opacity":  [ {"t": 0, "v": 0}, {"t": 0.8, "v": 1, "ease": "outCubic"} ],
-        "position": [ {"t": 0, "v": [0, 80], "ease": "outBack"}, {"t": 1, "v": [0, 0]} ]
-      } }
-  ]
-}
-```
-
-The block above is a teaser, not the spec — I author from [references/format.md](references/format.md), which has the full keys and the failure-causing gotchas (anchor↔position, glyph coverage, rich-text spans must cover spaces).
-
-Layer types: `text`, `image`, `video`, `solid`, `audio`, `comp` (sub-composition), `camera`.
-
-**Tween engine:** any `animate` channel is a keyframe list `{"t": sec, "v": value, "ease": name}`; the CLI bakes them to per-frame VASCO arrays. `position`/`scale`/`rotation` (degrees)/`anchor` compose into the transform matrix; `opacity`, `color`, `visible`, and any raw VASCO channel bake directly. Easings: `linear`, `hold`, `in/out/inOut` × `Quad Cubic Quart Quint Sine Expo Circ Back Elastic Bounce`, or cubic-bezier `[x1,y1,x2,y2]`.
-
-The reference set, and when I open each:
-- **[references/video-design.md](references/video-design.md)** — first, before anything: the concept layer — story arc, message, shot composition, pacing, animation craft, and a final craft check. Tool-independent thinking that decides *what* the video is.
-- **[references/design-best-practices.md](references/design-best-practices.md)** — before any layout: space & "less is more", hierarchy (stamp test), F-pattern & rule of thirds, contrast/proximity/alignment/consistency, colour, ≤2 typefaces + fallback fonts, plus PV/personalization rules (dark scrim over dynamic images, bounding box + shrink/break-line, time the personalized reveal, hold the ending) and a pre-ship checklist.
-- **[references/format.md](references/format.md)** — the authoritative spec for every scene: each layer's keys, effects (blur, shadow/glow/stroke/overlay, corner-pin), masks (rect/ellipse/path + morphing), track mattes, sub-comps, rich-text styles, per-character text animators, and the raw-VASCO passthrough rules.
-- **[references/motion-design.md](references/motion-design.md)** — for any video with motion (all of them): timing & spacing, the easing vocabulary, entrances/exits, kinetic text, beat transitions, effects with intent, depth/camera/atmosphere, rhythm to audio, polish, anti-patterns.
-- **[references/recipes.md](references/recipes.md)** — 43 paste-ready patterns (text · transitions · motion · masks · special FX · extras): tracking-in, rich multi-style headline, typewriter caret, per-word bounce, glitch, 3D flips, whip-pan, light-leak, iris/clock wipes, camera dolly, fly-through, mattes, glow/DOF/RGB-split/corner-pin/reflection/colour-grade, and more.
-
-## Rules of thumb
-
-- Text layers **require** `font` (path to a .ttf/.otf). Media/audio layers require `src`. Assets must exist at compile time. A bundled free font ships at `examples/assets/DejaVuSans.ttf` (`strata schema` prints the full VASCO schema for exotic properties).
-- **`anchor` + `position` — the #1 transform bug. I read this before animating position on an anchored layer.** `anchor` is the pivot for scale/rotation (comp coords); `position` is the absolute comp point where that pivot **lands** — *not* an offset once an anchor is set. `position` **defaults to the anchor**, so I set *only* `anchor` (the layer's center) and the layer scales/rotates in place. The trap: setting an anchor and then animating `position` to `[0,0]` (offset-style) snaps the pivot to the top-left and yanks the layer up there. To scale/rotate in place **and** move, I write every position keyframe as **anchor + offset**, with the *resting* keyframe equal to the anchor:
-  - ❌ `"anchor":[960,540]` with `"position":[[0,40]→[0,0]]` → flies to the top-left.
-  - ✅ `"anchor":[960,540]` with `"position":[[960,580]→[960,540]]` → rises 40px into place, centered.
-  - For a plain pixel nudge with no pivot I **omit `anchor`** and `position` is a simple offset from the layer's natural spot. (The anchor is baked as `T(position)·R·S·T(−anchor)` — the engine does not apply `anchor_point` itself.)
-- The `ease` on a keyframe shapes the segment leaving it; if absent, the next keyframe's ease is used (CSS- or AE-style placement both work).
-- Keyframe times are relative to the layer's `start`, not the comp.
-- Sub-comps that reference other sub-comps must be declared after the comps they reference inside `comps` (the main scene may reference any of them).
-- **Unknown keys are NOT ignored — they break the compile.** Any key that isn't documented sugar is passed straight into VASCO, and the schema is strict (`additionalProperties: false`). So an invented or mistyped key — `z`, `zIndex`, `x`, `y`, `width`/`height` on a layer, `comment`, `id`, `label`, `radius`, `src` on a non-media layer — fails the compile with "unknown key …". I use only documented sugar or a property genuinely part of raw VASCO for that object; the passthrough is an escape hatch for *real* VASCO properties, not a free-form bag.
-- **I verify before I render.** `strata validate scene.json` (free, offline, no auth) schema-checks the compiled VASCO and names any offending key/layer. I fix until it's clean, then compile/render — I never burn a render on a structural error.
-- **Styled spans + non-ASCII can fail the cloud render.** If a `styles` span boundary falls on a multi-byte character (`×`, `€`, accents, CJK, emoji), the exporter can error (3000) even though validate/compile pass. `validate`/`compile` print a ⚠ when they detect it; I use one span over the whole string, an ASCII substitute, or keep multi-byte chars out of split spans.
-- Comp max dimension is 1920 on each axis.
-- **Motion blur is ON by default** for every visual layer (`motion_blur: true`). I keep it on for anything that moves and pass `"motion_blur": false` only deliberately. For visible blur on fast moves I raise the comp's `shutter_angle` (default 0.5; 1–1.3 reads cinematic).
-- **Fonts must cover the text's glyphs.** A missing glyph renders as a tofu box or breaks the render. Before the final compile I verify the font has every character — especially non-ASCII letters, currency (€ £ ₪), curly quotes/dashes (“ ” – —), symbols (™ © • → ✓), emoji. See the glyph-coverage check in [references/format.md](references/format.md); I fix by choosing a covering font (e.g. Noto), per-span fonts in `styles`, or ASCII substitutes.
-- **Personalized videos**: every layer is an API-replaceable placeholder keyed by its name. If the video is personal/personalized, I read the *Personalization* and *Graphs & charts* sections in [references/format.md](references/format.md) — I size text boxes and media slots for varying content and treat graphs as swappable images whose animation reveals whatever data the image carries.
+# References (tech + recipes only)
+- **[references/format.md](references/format.md)** — the full technical spec: every layer key, 3D & camera params, effects (blur/shadow/glow/stroke/overlay/corner-pin), masks (rect/ellipse/path + morphing), track mattes, sub-comps, rich-text styles, per-character animators, asset generation, personalization, and the glyph-coverage check. **I open this for any syntax question.**
+- **[references/recipes.md](references/recipes.md)** — 43 paste-ready, engine-correct patterns (kinetic text, transitions, motion, masks, special FX, 3D flips, camera dolly, fly-through, glow/DOF/RGB-split/colour-grade…). **I start from a recipe instead of re-deriving.**
