@@ -25,6 +25,15 @@ A scene is a sequence of deliberate shots. For each beat I decide the shot:
 - **Reveal** that builds an image or layout piece by piece.
 - **Vary the shots** — sameness kills attention. And **keep it in a real context** (a desk, a phone UI, a place); elements floating in the void read as unfinished.
 
+## Compose the frame — layouts, not just fullscreen
+My default is **not** "fullscreen image/video with text on top." Every layer has a `box`, so I compose deliberately and vary it across beats:
+- **Split & grid layouts:** half/half (media on one side, a text/colour panel on the other), thirds, 2×2 grids, a sidebar + main.
+- **Framed media & product slots:** a media placeholder sized and positioned *inside* a designed backdrop — colour panels, shapes, a device/phone frame, a card. Perfect for product shots and personalized photos.
+- **Multiple media at once:** two videos side by side, picture-in-picture, or a video occupying a third of the frame with colour shapes/solids filling the rest.
+- **Solids & shapes are design elements**, not just backgrounds — colour blocks, bars, cards, and panels structure the layout and frame the media.
+- **Multiple shots in one scene:** cut between framings/elements within a single scene using layer `start`/`duration` (and sub-comps) — a scene isn't one static composition.
+The strongest videos change their composition beat to beat; I avoid repeating the same fullscreen-media-plus-caption frame.
+
 ## 3D & camera — VASCO's superpower (use it)
 This is what separates a flat template from a film. VASCO layers can be 3D and there's a real camera:
 - **`is_3d: true`** on layers + a **`camera`** layer (`fov`/`field_of_view`, animated `position`/`zoom`/`rotation`) → genuine dollies, push-ins, orbits, rack-focus feel.
