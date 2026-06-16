@@ -114,6 +114,7 @@ function loadAndCompile(scenePath) {
         process.exit(1);
     }
     for (const w of riskyStyledTextWarnings(scene)) console.error('⚠ ' + w);
+    for (const w of riskyPrecompFontWarnings(scene)) console.error('⚠ ' + w);
     return { scene, doc, abs };
 }
 
@@ -139,6 +140,26 @@ function riskyStyledTextWarnings(scene) {
         }
     }
     return out;
+}
+
+// Known server-side exporter bug: when a text layer (font reference) lives in two
+// or more SUB-compositions AND the scene also uses image/video assets, the cloud
+// render fails with the opaque error 3000 — the exporter mis-builds the per-comp
+// asset/font tables. Bisected exhaustively: font identity, sharing, animation,
+// nesting, and resolution are all irrelevant; only (text in ≥2 sub-comps) + (any
+// media asset) matters. Moving the text to the MAIN comp avoids it.
+function riskyPrecompFontWarnings(scene) {
+    const comps = scene.comps;
+    if (!comps || typeof comps !== 'object') return [];
+    const compEntries = Array.isArray(comps) ? comps.map((c, i) => [String(i), c]) : Object.entries(comps);
+    const isMedia = l => l && (l.type === 'image' || l.type === 'video' || l.type === 'media');
+    const hasText = c => (c?.layers ?? []).some(l => l?.type === 'text');
+    const textComps = compEntries.filter(([, c]) => hasText(c)).map(([name]) => name);
+    if (textComps.length < 2) return [];
+    const allLayers = [scene.layers, ...compEntries.map(([, c]) => c?.layers)];
+    const hasMedia = allLayers.some(ls => (ls ?? []).some(isMedia));
+    if (!hasMedia) return [];
+    return [`text layers live in ${textComps.length} sub-comps (${textComps.join(', ')}) while the scene also uses image/video assets — Idomoo's exporter currently FAILS render (error 3000) on this combination. Fix: move the text layers into the MAIN composition (over image-only sub-comps), or keep text in at most one sub-comp.`];
 }
 
 function summary(doc) {
