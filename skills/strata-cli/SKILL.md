@@ -1,6 +1,6 @@
 ---
 name: strata-cli
-description: Author Idomoo IDM videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make/build/compile an IDM, create a video template as .idm, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+description: Author Idomoo IDM videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. Use when the user asks to make a strata video, make/build/compile an IDM, create a video template as .idm, build a motion-graphics / kinetic-text / title-sequence / explainer / personalized or data-driven video, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers (text, image, video, solid, audio, camera) with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
 ---
 
 # Strata CLI — author, generate assets, compile & render IDM videos
