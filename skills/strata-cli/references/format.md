@@ -138,7 +138,7 @@ Define under scene `comps`, instantiate with a comp layer; reuse freely:
 
 If a sub-comp contains a comp layer referencing another sub-comp, declare the referenced one **earlier** in `comps`.
 
-⚠️ **Text in ≥2 sub-comps + images = cloud render fails (error 3000).** The Idomoo exporter currently crashes when a **text layer lives in two or more sub-compositions** *and* the scene also uses **image/video assets** — `validate`/`compile` pass locally, then the render errors 3000. It is purely structural (font identity, sharing, animation, nesting, and resolution are all irrelevant). **Fix:** put the text layers in the **MAIN** composition over image-only sub-comps, or keep text in **at most one** sub-comp. `validate`/`compile` print a ⚠ when they detect this combination.
+⚠️ **Unique layer names — duplicate names across sub-comps crash the render (error 3000).** The exporter keys layers (especially text placeholders) by name **globally**. Two layers sharing a name in different sub-comps — e.g. a `card` sub-comp reused with its text layer named `label` each time — collide and the render fails 3000 (it compiles/validates fine locally). The compiler **auto-uniquifies** duplicates at compile time (`label`→`label_2`, …) and prints what it renamed, so scenes render; still, author distinct, meaningful names so personalization keys stay predictable.
 
 ## Camera
 

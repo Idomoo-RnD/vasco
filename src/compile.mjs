@@ -128,7 +128,26 @@ class Compiler {
             this.doc.compositions.push(this.comp(def, name));
         this.doc.compositions.push(this.comp(this.scene, this.scene.name ?? 'main'));
         this.doc.entry_point = this.doc.compositions.length - 1;
+        this.uniquifyLayerNames();
         return this.doc;
+    }
+
+    // Layer names must be unique across the WHOLE scene: the Idomoo exporter keys
+    // layers (esp. text placeholders) by name globally, so the same name in two
+    // sub-comps (e.g. "label" on every card) collides and crashes export (err 3000).
+    // Mattes are already resolved to indices by now, so renaming here is safe.
+    uniquifyLayerNames() {
+        const seen = new Set();
+        const renames = [];
+        for (const c of this.doc.compositions) for (const l of c.layers ?? []) {
+            if (typeof l.name !== 'string') continue;
+            if (!seen.has(l.name)) { seen.add(l.name); continue; }
+            const base = l.name;
+            let k = 2, n = `${base}_${k}`;
+            while (seen.has(n)) { k++; n = `${base}_${k}`; }
+            l.name = n; seen.add(n); renames.push([base, n]);
+        }
+        if (renames.length) Object.defineProperty(this.doc, '__renames', { value: renames, enumerable: false });
     }
 
     assetId(uri, typeHint) {
