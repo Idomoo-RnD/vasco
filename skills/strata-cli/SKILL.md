@@ -124,8 +124,24 @@ Chain: **image → animate into video → narration + music**, then point `src` 
 
 ## Workflow
 1. **Sort out assets first.** For each visual element I ask: (a) do they have a file or should I `generate` it, and (b) **still image or moving video** — motion reads as motion-graphics, so I favour video/animated stills for hero moments. I ask about **narration**/music too. Text layers need a real `.ttf`/`.otf`.
-2. **Lock story & shots** (Part 1) and the design (Part 2). Run the concept past the user before heavy building.
-3. **Write the scene JSON** (compact format — `format.md` is the spec). Reusable sub-comps for repeated elements; iterate the timeline.
+2. **Present a STORYBOARD and get sign-off — before any scene JSON.** I apply the craft (Part 1) and design (Part 2) to plan the piece, then show the user a storyboard they can read and approve. I do **not** start authoring until they confirm; I revise the storyboard with them first (cheap to re-cut, expensive to re-render). Format:
+   - **Title** + one-line **Style** (palette, motion feel, type).
+   - A **beat table** — `Time | Visual / Motion | Voiceover | Sound` — one row per beat (~2–4s), covering the full duration.
+   - **End frame** (logo/CTA text) and **Motion notes** (transition timing ~300–500ms; transform-based — scale/position/opacity/masks; the intended feel).
+
+   ```
+   Title: "Find It Faster"
+   Style: Clean, bright, minimal UI motion. White bg, brand-colour accents, smooth morphs, soft kinetic type.
+   | Time | Visual / Motion | Voiceover | Sound |
+   |------|-----------------|-----------|-------|
+   | 0:00–0:03 | Search bar slides in, soft scale-up; cursor blinks | "Every big answer…" | soft digital pulse |
+   | 0:03–0:06 | "how do I start?" types into the bar | "…starts with a simple question." | keyboard taps |
+   | … | … | … | … |
+   | 0:28–0:30 | Logo appears; "Search it. Find it." fades in | "…start with Search." | final soft chime |
+   End frame: Google Search — "Search it. Find it."
+   Motion notes: fast confident 300–500ms transitions, transform-only, light bounce on bar + cards.
+   ```
+3. **Write the scene JSON** to the approved storyboard (compact format — `format.md` is the spec). Reusable sub-comps for repeated elements; **unique name on every layer**; iterate the timeline.
 4. **Validate, then compile:** `strata validate scene.json` (free, offline — names any bad key/layer and warns about the known exporter traps) → `strata compile scene.json -o out.idm`.
 5. **Render:** `strata render scene.json --library "<id>" -o out.mp4`.
    - **Library — pick ONE and reuse it.** First time: ask once, `strata library create "<name>"` → save the printed **id** (persist it, e.g. a `.idm-library` file). Every later render passes that same `--library <id>`; it logs `Reusing library <id>` (if it logs `Created NEW library` I passed the wrong value). Switch only when the user says so.
