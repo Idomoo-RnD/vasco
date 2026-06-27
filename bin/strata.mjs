@@ -120,7 +120,46 @@ function loadAndCompile(scenePath) {
         const more = doc.__renames.length > 8 ? ` (+${doc.__renames.length - 8} more)` : '';
         console.error(`⚠ renamed ${doc.__renames.length} duplicate layer name(s) to keep them unique — the exporter requires unique names: ${shown}${more}`);
     }
+    for (const w of layoutWarnings(scene)) console.error('⚠ ' + w);
     return { scene, doc, abs };
+}
+
+// Catch the two most common visual bugs from the scene's static boxes/timing:
+// text clipped outside the frame, and two text layers overlapping while both are
+// visible (unreadable). Box-based + time-window — conservative thresholds so
+// entrance offsets and stacked-but-separate text don't false-positive.
+function layoutWarnings(scene) {
+    const out = [];
+    const rect = b => (Array.isArray(b) && b.length >= 4) ? { x: b[0], y: b[1], w: b[2], h: b[3] } : null;
+    const interArea = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
+        * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+    const sceneDur = scene.duration ?? 4;
+    const comps = [['main', { layers: scene.layers, width: scene.width, height: scene.height, duration: sceneDur }]];
+    const cs = scene.comps;
+    if (cs && typeof cs === 'object') for (const [n, c] of Object.entries(cs)) comps.push([n, c]);
+    for (const [cn, c] of comps) {
+        const cw = c?.width ?? scene.width, ch = c?.height ?? scene.height, cd = c?.duration ?? sceneDur;
+        const items = (c?.layers ?? []).map(l => {
+            const box = rect(l.box ?? l.bounds);
+            const start = l.start ?? 0;
+            return { l, box, start, end: start + (l.duration ?? Math.max(0, cd - start)) };
+        }).filter(x => x.box);
+        for (const { l, box } of items) {
+            if (l.type !== 'text') continue;
+            const outside = box.x < -1 || box.y < -1 || box.x + box.w > cw + 1 || box.y + box.h > ch + 1;
+            if (outside && l.position === undefined && !(l.animate && l.animate.position))
+                out.push(`comp "${cn}": text "${l.name ?? '?'}" box extends outside the ${cw}×${ch} frame — it may be clipped. Keep text inside the frame (title-safe ~90%).`);
+        }
+        const texts = items.filter(x => x.l.type === 'text');
+        for (let i = 0; i < texts.length; i++) for (let j = i + 1; j < texts.length; j++) {
+            const a = texts[i], b = texts[j];
+            if (a.end <= b.start || b.end <= a.start) continue;
+            const minArea = Math.min(a.box.w * a.box.h, b.box.w * b.box.h);
+            if (minArea > 0 && interArea(a.box, b.box) / minArea > 0.35)
+                out.push(`comp "${cn}": text layers "${a.l.name ?? '?'}" and "${b.l.name ?? '?'}" overlap on screen while both visible — likely unreadable. Separate them in space or stagger their timing.`);
+        }
+    }
+    return out;
 }
 
 function summary(doc) {
