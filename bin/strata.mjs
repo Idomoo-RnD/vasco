@@ -231,6 +231,21 @@ function layoutWarnings(scene) {
         };
         overlapPairs('text', 'text layers', 'likely unreadable. Separate them in space or stagger their timing.');
         overlapPairs('comp', 'blocks', 'they stack on top of each other. Give each a distinct box, or stagger their timing.');
+
+        // position-is-a-delta footgun: `position` is an OFFSET added to the box's
+        // [x,y] (no anchor) — repeating the box coords double-offsets the layer.
+        // Warn when a position value ≈ the box origin (and the box origin is real).
+        for (const { l, box } of items) {
+            if (l.anchor != null) continue; // with anchor, position is absolute — different model
+            if (box.x <= 30 && box.y <= 30) continue; // box at ~origin → position-as-absolute is fine
+            const vals = [];
+            if (Array.isArray(l.position)) vals.push(l.position);
+            if (l.animate && Array.isArray(l.animate.position))
+                for (const kf of l.animate.position) if (Array.isArray(kf?.v)) vals.push(kf.v);
+            const hit = vals.find(v => Math.abs((v[0] ?? 0) - box.x) <= 30 && Math.abs((v[1] ?? 0) - box.y) <= 30);
+            if (hit)
+                out.push(`comp "${cn}": "${l.name ?? '?'}" has position [${hit[0]},${hit[1]}] ≈ its box origin [${box.x},${box.y}] — \`position\` is a DELTA added to the box, so this lands the layer near [${box.x + (hit[0] ?? 0)},${box.y + (hit[1] ?? 0)}], off the box. Use an offset that resolves to [0,0] (e.g. rise [0,60]→[0,0]); the box places it.`);
+        }
     }
     return out;
 }
