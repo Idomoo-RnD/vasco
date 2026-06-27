@@ -28,7 +28,7 @@ import { VERSION, REPO, RAW } from '../src/version.mjs';
 const args = process.argv.slice(2);
 
 // `strata scene.json` / `strata file.idm` — a bare file arg implies the command.
-const COMMANDS = ['compile', 'build', 'validate', 'inspect', 'init', 'render',
+const COMMANDS = ['compile', 'build', 'validate', 'inspect', 'init', 'render', 'snapshot', 'add',
     'auth', 'library', 'generate', 'schema', 'skill', 'update', 'uninstall', 'help', 'version'];
 if (args[0] && !COMMANDS.includes(args[0]) && !args[0].startsWith('-')) {
     if (/\.json$/i.test(args[0])) args.unshift('compile');
@@ -182,7 +182,8 @@ async function isSeaBinary() {
 // dir differs per agent. `idm-cli`/`idm-maker` are legacy names — migrate on touch.
 const SKILL_NAME = 'strata-cli';
 const LEGACY_SKILL_NAMES = ['idm-cli', 'idm-maker'];
-const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/recipes.md'];
+const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/recipes.md',
+    'references/blocks.md', 'references/blueprints.md', 'references/personalization.md'];
 
 // Load the skill files: prefer the repo checkout (dev — instant, offline), else
 // fetch the published copy from main (SEA binary has no bundled skills/).
@@ -251,6 +252,41 @@ function refreshInstalledSkills(contents) {
     return msgs;
 }
 
+// Reuse-first block library — drop-in sub-comps. `strata add <block> scene.json`
+// merges the comp (name-uniquified) + an instance stub. Mirrors references/blocks.md.
+const F = './font.ttf', FB = './font-bold.ttf';
+const BLOCKS = {
+    'lower-third': { box: [80, 860, 760, 150], comp: { width: 760, height: 150, duration: 5, layers: [
+        { type: 'solid', name: 'lt_bar', color: '#101418', box: [0, 40, 620, 92], opacity: 0.92 },
+        { type: 'solid', name: 'lt_accent', color: '#4cc9f0', box: [0, 40, 8, 92] },
+        { type: 'text', name: 'lt_name', text: 'Jane Cooper', font: FB, size: 40, color: '#ffffff', box: [28, 48, 580, 46], align: 'left middle' },
+        { type: 'text', name: 'lt_title', text: 'Head of Design', font: F, size: 26, color: '#9aa3bf', box: [28, 92, 580, 36], align: 'left middle' } ] } },
+    'stat-card': { box: [120, 200, 420, 300], comp: { width: 420, height: 300, duration: 5, layers: [
+        { type: 'solid', name: 'sc_bg', color: '#0e1230', box: [0, 0, 420, 300] },
+        { type: 'solid', name: 'sc_rule', color: '#ffd166', box: [40, 96, 64, 6] },
+        { type: 'text', name: 'sc_value', text: '98%', font: FB, size: 120, color: '#ffffff', box: [40, 110, 340, 130], align: 'left middle' },
+        { type: 'text', name: 'sc_label', text: 'Customer satisfaction', font: F, size: 28, color: '#9aa3bf', box: [40, 40, 340, 40], align: 'left middle' } ] } },
+    'end-card': { box: [0, 0, 1280, 720], comp: { width: 1280, height: 720, duration: 4, layers: [
+        { type: 'solid', name: 'ec_bg', color: '#0e1230', box: [0, 0, 1280, 720] },
+        { type: 'text', name: 'ec_title', text: 'Acme', font: FB, size: 140, color: '#ffffff', box: [0, 240, 1280, 170], align: 'center middle' },
+        { type: 'text', name: 'ec_cta', text: 'Get started today', font: F, size: 44, color: '#4cc9f0', box: [0, 430, 1280, 70], align: 'center middle' } ] } },
+    'logo-sting': { box: [0, 0, 1280, 720], comp: { width: 1280, height: 720, duration: 3, layers: [
+        { type: 'solid', name: 'ls_bg', color: '#ffffff', box: [0, 0, 1280, 720] },
+        { type: 'image', name: 'ls_logo', src: './logo.png', box: [440, 260, 400, 200], fit: 'fit', anchor: [640, 360],
+          animate: { scale: [{ t: 0, v: 0.7, ease: 'outBack' }, { t: 0.6, v: 1 }], opacity: [{ t: 0, v: 0 }, { t: 0.3, v: 1 }] } } ] } },
+    'device-frame': { box: [700, 90, 520, 900], comp: { width: 520, height: 900, duration: 6, layers: [
+        { type: 'solid', name: 'df_body', color: '#111418', box: [0, 0, 520, 900] },
+        { type: 'solid', name: 'df_screen', color: '#000000', box: [24, 60, 472, 780] },
+        { type: 'image', name: 'df_shot', src: './screen.png', box: [24, 60, 472, 780], fit: 'fill' } ] } },
+    'search-bar': { box: [190, 480, 900, 96], comp: { width: 900, height: 96, duration: 6, layers: [
+        { type: 'solid', name: 'sb_pill', color: '#ffffff', box: [0, 0, 900, 96], effects: [{ type: 'shadow', color: '#00000028', distance: 6, size: 20 }] },
+        { type: 'text', name: 'sb_query', text: 'how do I start?', font: F, size: 42, color: '#202124', box: [40, 0, 760, 96], align: 'left middle' } ] } },
+    'quote-card': { box: [140, 150, 1000, 420], comp: { width: 1000, height: 420, duration: 5, layers: [
+        { type: 'solid', name: 'qc_bg', color: '#0e1230', box: [0, 0, 1000, 420] },
+        { type: 'text', name: 'qc_quote', text: '"This changed how we ship."', font: FB, size: 56, color: '#ffffff', box: [60, 60, 880, 220], align: 'left top' },
+        { type: 'text', name: 'qc_attr', text: '- A. Customer, Acme', font: F, size: 30, color: '#9aa3bf', box: [60, 320, 880, 44], align: 'left middle' } ] } },
+};
+
 async function main() {
     switch (cmd) {
         case 'compile':
@@ -305,7 +341,9 @@ async function main() {
             break;
         }
 
+        case 'snapshot':
         case 'render': {
+            const posterOnly = cmd === 'snapshot' || flag('--poster');
             const input = args[1];
             if (!input) fail(`Usage: strata render <scene.json|file.idm> --library <name-or-id> [-o out.mp4]
                   [--height <px>] [--quality <n>] [--base <api url>] [--account <id>] [--token <secret>] [--json]`);
@@ -359,7 +397,7 @@ async function main() {
             const outHeight = Number(opt('--height', comp ? String(comp.height) : '1080'));
             const quality = Number(opt('--quality', '26'));
             const posterTime = Number(opt('--poster-time', '1'));
-            const outPath = resolve(opt('-o', opt('--out', filename.replace(/\.idm$/i, '') + '.mp4')));
+            const outPath = resolve(opt('-o', opt('--out', filename.replace(/\.idm$/i, '') + (posterOnly ? '.jpg' : '.mp4'))));
 
             try {
                 const { videoUrl, posterUrl, libraryId } = await renderIdm({
@@ -369,15 +407,27 @@ async function main() {
                     outHeight, quality, posterTime,
                     log: m => { if (!JSON_MODE) console.log('  ' + m); },
                 });
-                if (!JSON_MODE) console.log('⬇️  downloading MP4...');
                 mkdirSync(dirname(outPath), { recursive: true });
-                await download(videoUrl, outPath);
-                if (JSON_MODE) out({ ok: true, mp4_path: outPath, video_url: videoUrl, poster_url: posterUrl, library_id: libraryId });
-                else {
-                    console.log(`✅ wrote ${outPath}`);
-                    console.log(`   video:   ${videoUrl}`);
-                    if (posterUrl) console.log(`   poster:  ${posterUrl}`);
-                    console.log(`   library: ${libraryId}  ·  reuse with --library ${libraryId} so every render lands here`);
+                if (posterOnly) {
+                    if (!posterUrl) fail('Render produced no poster image.', 1);
+                    if (!JSON_MODE) console.log('⬇️  downloading poster...');
+                    await download(posterUrl, outPath);
+                    if (JSON_MODE) out({ ok: true, poster_path: outPath, poster_url: posterUrl, video_url: videoUrl, library_id: libraryId });
+                    else {
+                        console.log(`✅ wrote ${outPath}  (snapshot — poster only)`);
+                        console.log(`   poster:  ${posterUrl}`);
+                        console.log(`   library: ${libraryId}  ·  reuse with --library ${libraryId}`);
+                    }
+                } else {
+                    if (!JSON_MODE) console.log('⬇️  downloading MP4...');
+                    await download(videoUrl, outPath);
+                    if (JSON_MODE) out({ ok: true, mp4_path: outPath, video_url: videoUrl, poster_url: posterUrl, library_id: libraryId });
+                    else {
+                        console.log(`✅ wrote ${outPath}`);
+                        console.log(`   video:   ${videoUrl}`);
+                        if (posterUrl) console.log(`   poster:  ${posterUrl}`);
+                        console.log(`   library: ${libraryId}  ·  reuse with --library ${libraryId} so every render lands here`);
+                    }
                 }
             } catch (e) {
                 const msg = e?.message ?? String(e);
@@ -728,6 +778,47 @@ async function main() {
             break;
         }
 
+        case 'add': {
+            const names = Object.keys(BLOCKS);
+            if (flag('--list') || !args[1]) {
+                if (JSON_MODE) out({ ok: true, blocks: names });
+                else { console.log('Available blocks (strata add <block> [scene.json]):'); for (const n of names) console.log('  ' + n); }
+                break;
+            }
+            const block = BLOCKS[args[1]];
+            if (!block) fail(`Unknown block "${args[1]}". Available: ${names.join(', ')}`, 2);
+            const scenePath = args.slice(2).find(a => a && !a.startsWith('-'));
+            const compKey = args[1].replace(/-/g, '_');
+            if (!scenePath) {
+                // print the comp + an instance stub for the user to paste
+                const stub = { type: 'comp', comp: compKey, name: `${compKey}_inst`, box: block.box, start: 0, duration: block.comp.duration };
+                out({ comps: { [compKey]: block.comp }, instance: stub },
+                    `// add to "comps":\n${JSON.stringify({ [compKey]: block.comp }, null, 2)}\n\n// add to "layers":\n${JSON.stringify({ type: 'comp', comp: compKey, name: `${compKey}_inst`, box: block.box, start: 0, duration: block.comp.duration }, null, 2)}`);
+                break;
+            }
+            let scene;
+            try { scene = JSON.parse(readFileSync(resolve(scenePath), 'utf8')); }
+            catch (e) { fail(`Cannot read scene "${scenePath}": ${e.message}`, 2); }
+            scene.comps = scene.comps ?? {};
+            // unique comp key
+            let ck = compKey, i = 2;
+            while (scene.comps[ck]) ck = `${compKey}_${i++}`;
+            scene.comps[ck] = JSON.parse(JSON.stringify(block.comp));
+            scene.layers = scene.layers ?? [];
+            // unique instance layer name across the whole scene
+            const used = new Set();
+            for (const arr of [scene.layers, ...Object.values(scene.comps).map(c => c?.layers ?? [])])
+                for (const l of arr) if (l?.name) used.add(l.name);
+            let inst = `${ck}_inst`, j = 2;
+            while (used.has(inst)) inst = `${ck}_inst_${j++}`;
+            scene.layers.push({ type: 'comp', comp: ck, name: inst, box: block.box, start: 0, duration: block.comp.duration,
+                animate: { opacity: [{ t: 0, v: 0 }, { t: 0.4, v: 1 }] } });
+            writeFileSync(resolve(scenePath), JSON.stringify(scene, null, 2));
+            if (JSON_MODE) out({ ok: true, block: args[1], comp: ck, instance: inst, scene: scenePath });
+            else console.log(`✅ added "${args[1]}" to ${scenePath} (comp "${ck}", instance "${inst}") — tune its box/colours/text, then compile.`);
+            break;
+        }
+
         case 'version':
         case '--version':
         case '-v':
@@ -752,6 +843,11 @@ Usage:
                [--height <px>] [--quality <n>] [--base <url>]
                                                      upload to Idomoo, render, download MP4
                                                      (asks which library when run interactively)
+  strata snapshot <scene.json|file.idm> --library <id>  render + download only the poster frame (.jpg)
+                                                     — fast visual QA without keeping the MP4
+  strata add      <block> [scene.json]                  add a reusable sub-comp block (lower-third,
+                                                     stat-card, end-card, logo-sting, device-frame,
+                                                     search-bar, quote-card). --list to list them
   strata library  list                                  list Idomoo libraries (id + name)
   strata library  create <name>                          create (or reuse) a library, print its id —
                                                        capture it once, then render --library <id>

@@ -7,7 +7,7 @@
 - A few FX want tiny helper PNGs you can generate once: **`noise.png`** (grayscale value-noise, for luma dissolves), **`flare.png`** / **`leak.png`** (bright shapes on black, used with `"blend":"add"`). All optional.
 - **Anchor rule** (the #1 gotcha): when a recipe sets `anchor`, every `position` keyframe is the absolute point where that anchor lands — the *resting* keyframe equals the anchor. See the anchor+position warning in [format.md](format.md).
 
-Contents: [Text](#1-text) · [Transitions](#2-transitions) · [Motion](#3-motion) · [Masks](#4-masks) · [Special FX](#5-special-fx) · [Extras](#6-extras)
+Contents: [Text](#1-text) · [Transitions](#2-transitions) · [Motion](#3-motion) · [Masks](#4-masks) · [Special FX](#5-special-fx) · [Extras](#6-extras) · [Data viz](#7-data-viz)
 
 ---
 
@@ -433,6 +433,60 @@ Build one row per ease so you can feel the difference side-by-side.
   "animate": { "position": [{"t":0.6,"v":[0,0],"ease":"outBounce"},{"t":2.6,"v":[820,0]}] } }
 ```
 *(Duplicate per ease — `linear`, `inOutSine`, `outCubic`, `outQuint`, `outExpo`, `outBack`, `outElastic`, `outBounce` — stacking the rows down the frame with a label each.)*
+
+## 7. Data viz
+
+Rule: **author at the full/canonical state and animate the reveal** — a mask wipe in the growth direction. The number/shape carries the data; the animation only presents it (so it works when the API swaps in a different value).
+
+### Count-up number
+Bake an animated text value by stepping `text` per frame is not supported directly — instead reveal a final number with a fast scale/track-in and a mask wipe, or animate a bar/ring alongside it. For a true rolling count, render the number as an image sequence upstream; for most videos the entrance below reads as "counting".
+```json
+{ "type": "text", "name": "kpi_value", "text": "98%", "font": "./font-bold.ttf", "size": 120, "color": "#fff",
+  "box": [40,110,340,130], "align": "left middle", "anchor": [210,175],
+  "animate": { "scale": [{"t":0,"v":0.6,"ease":"outBack"},{"t":0.5,"v":1}], "opacity": [{"t":0,"v":0},{"t":0.25,"v":1}] } }
+```
+
+### Bar chart (mask wipe L→R)
+The bar solid is full width; a rect mask animates its width from 0 to full so it "grows".
+```json
+{ "type": "solid", "name": "bar_a", "color": "#4cc9f0", "box": [120,300,700,48],
+  "mask": { "rect": [120,300,0,48], "animate": { "shape": [ {"t":0,"v":{"rect":[120,300,0,48]}}, {"t":1,"v":{"rect":[120,300,560,48]},"ease":"outCubic"} ] } } }
+```
+*(560/700 = 80%. Stagger several bars with offset `start`; label each with a text layer.)*
+
+### Progress ring (expanding wedge)
+A coloured disc revealed by a growing ellipse mask reads as a ring filling.
+```json
+{ "type": "solid", "name": "ring_fill", "color": "#ffd166", "box": [540,200,200,200],
+  "mask": { "shapes": [ {"ellipse":[640,300,100,100]}, {"ellipse":[640,300,70,70],"blend":"subtract"} ] },
+  "animate": { "rotation": [{"t":0,"v":-90,"ease":"outCubic"},{"t":1.2,"v":270}] } }
+```
+*(Pair with a centred `kpi_value` text; rotate a masked wedge for an exact percentage, or scale a wipe.)*
+
+### Stat bar / percentage fill
+A track solid + a fill solid whose width is masked open.
+```json
+{ "type": "solid", "name": "track", "color": "#1c2030", "box": [120,420,700,18] },
+{ "type": "solid", "name": "fill",  "color": "#34a853", "box": [120,420,700,18],
+  "mask": { "rect": [120,420,0,18], "animate": { "shape": [ {"t":0,"v":{"rect":[120,420,0,18]}}, {"t":0.9,"v":{"rect":[120,420,476,18]},"ease":"outQuint"} ] } } }
+```
+
+### Line-chart draw (path mask sweep)
+Draw a line by sweeping a rectangular mask across a pre-drawn line image/solid path.
+```json
+{ "type": "image", "name": "line_plot", "src": "./line.png", "box": [120,140,1040,440], "fit": "fit",
+  "mask": { "rect": [120,140,0,440], "animate": { "shape": [ {"t":0,"v":{"rect":[120,140,0,440]}}, {"t":1.6,"v":{"rect":[120,140,1040,440]},"ease":"inOutSine"} ] } } }
+```
+
+### Parallax depth (3D)
+Give layers different z and drift the camera for instant depth.
+```json
+{ "type": "camera", "name": "cam", "animate": { "position": [ {"t":0,"v":[640,360,-1200],"ease":"inOutSine"}, {"t":4,"v":[700,360,-1000]} ] } },
+{ "type": "image", "name": "bg_far",  "src": "./bg.jpg",  "box": [0,0,1280,720], "is_3d": true, "position": [640,360,-400] },
+{ "type": "image", "name": "mid_card", "src": "./card.png","box": [340,180,600,360], "is_3d": true, "position": [640,360,-120] },
+{ "type": "text",  "name": "fg_title", "text": "Depth", "font": "./font-bold.ttf", "size": 120, "color": "#fff", "box": [0,300,1280,160], "align": "center middle", "is_3d": true, "position": [640,360,0] }
+```
+*(Near layers (z≈0) drift more than far ones (z negative) as the camera moves — true cinematic parallax. See SKILL.md "3D & camera".)*
 
 ---
 

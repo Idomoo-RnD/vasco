@@ -141,14 +141,20 @@ Chain: **image → animate into video → narration + music**, then point `src` 
    End frame: Google Search — "Search it. Find it."
    Motion notes: fast confident 300–500ms transitions, transform-only, light bounce on bar + cards.
    ```
-3. **Write the scene JSON** to the approved storyboard (compact format — `format.md` is the spec). Reusable sub-comps for repeated elements; **unique name on every layer**; iterate the timeline.
+3. **Write the scene JSON** to the approved storyboard (compact format — `format.md` is the spec). I **reuse blocks** (`strata add <block>` — see [blocks.md](blocks.md)) and follow a [blueprint](blueprints.md) for the video type instead of building from scratch; **unique name on every layer**; iterate the timeline.
 4. **Validate, then compile:** `strata validate scene.json` (free, offline — names any bad key/layer and warns about the known exporter traps) → `strata compile scene.json -o out.idm`.
 5. **Render:** `strata render scene.json --library "<id>" -o out.mp4`.
    - **Library — pick ONE and reuse it.** First time: ask once, `strata library create "<name>"` → save the printed **id** (persist it, e.g. a `.idm-library` file). Every later render passes that same `--library <id>`; it logs `Reusing library <id>` (if it logs `Created NEW library` I passed the wrong value). Switch only when the user says so.
    - Renders take minutes — I run them in the **background** and report the `video_url`/`poster_url`.
-6. **Verify** (craft check above). Debug with `--vasco` or `strata inspect out.idm`.
+6. **Verify** — I run `strata snapshot scene.json --library <id>` for a fast poster-only frame (cheaper than a full MP4) and look at it, then run the **Definition of Done** before I call it shipped:
+   - Message clear in the first 3 seconds? Every shot earns its place? Stillness *and* energy?
+   - Text legible **muted** (captions/scrim where needed) and inside the safe area?
+   - **Every layer name unique** (the compiler warns/fixes, but I author them unique)?
+   - Holds on the CTA; nothing loops cheaply; motion blur on moving layers?
+   - **Would I ship this with my name on it?** If not, I fix it before delivering.
+   Debug with `--vasco` or `strata inspect out.idm`.
 
-Commands: `compile` · `validate` · `inspect` · `generate image|video|narration|music|voices` · `render --library <id>` · `library list|create` · `init` · `auth login|status` · `schema` · `update` · `uninstall`. Add `--json` for machine-readable output (errors on stderr; nothing reads a TTY non-interactively). Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
+Commands: `compile` · `validate` · `inspect` · `generate image|video|narration|music|voices` · `add <block>` · `render --library <id>` · `snapshot --library <id>` (poster-only, fast QA) · `library list|create` · `init` · `auth login|status` · `schema` · `update` · `uninstall`. Add `--json` for machine-readable output (errors on stderr; nothing reads a TTY non-interactively). Exit codes: 0 ok · 1 compile/schema · 2 missing file · 3 auth · 4 render timeout.
 
 ## Technical must-knows (the traps)
 - **`anchor` + `position` — the #1 bug.** Once an `anchor` is set, `position` is the **absolute comp point where that pivot lands**, not an offset (it defaults to the anchor). To scale/rotate in place AND move, write every position keyframe as **anchor + offset** with the resting keyframe equal to the anchor. ❌ `anchor:[960,540]` + `position:[[0,40]→[0,0]]` flies to the corner. ✅ `position:[[960,580]→[960,540]]` rises into place. No pivot needed? Omit `anchor` and `position` is a plain offset.
@@ -159,6 +165,9 @@ Commands: `compile` · `validate` · `inspect` · `generate image|video|narratio
 
 ---
 
-# References (tech + recipes only)
-- **[references/format.md](references/format.md)** — the full technical spec: every layer key, 3D & camera params, effects (blur/shadow/glow/stroke/overlay/corner-pin), masks (rect/ellipse/path + morphing), track mattes, sub-comps, rich-text styles, per-character animators, asset generation, personalization, and the glyph-coverage check. **I open this for any syntax question.**
-- **[references/recipes.md](references/recipes.md)** — 43 paste-ready, engine-correct patterns (kinetic text, transitions, motion, masks, special FX, 3D flips, camera dolly, fly-through, glow/DOF/RGB-split/colour-grade…). **I start from a recipe instead of re-deriving.**
+# References
+- **[references/format.md](references/format.md)** — the full technical spec: every layer key, 3D & camera params, effects (blur/shadow/glow/stroke/overlay/corner-pin), masks (rect/ellipse/path + morphing), track mattes, sub-comps, rich-text styles, per-character animators, asset generation, and the glyph-coverage check. **I open this for any syntax question.**
+- **[references/recipes.md](references/recipes.md)** — paste-ready, engine-correct patterns (kinetic text, transitions, motion, masks, special FX, 3D, camera, and **data-viz**: count-up, bar chart, progress ring, stat bar, line draw, parallax). **I start from a recipe instead of re-deriving.**
+- **[references/blocks.md](references/blocks.md)** — reusable sub-comp **blocks** (lower-third, stat-card, end-card, logo-sting, device-frame, search-bar, quote-card). I reuse a block via `strata add <block> scene.json` instead of building from scratch.
+- **[references/blueprints.md](references/blueprints.md)** — whole-video **recipes by type** (product launch, explainer, social promo, data story, logo reveal, website/app showcase, overlay-existing-footage) — structure, pacing, and which blocks to use. I pick one to feed the storyboard.
+- **[references/personalization.md](references/personalization.md)** — one template → **many personalized videos** (placeholder naming, data-driven batch). Idomoo's superpower; I read it for any personal/data-driven video.
