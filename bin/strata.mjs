@@ -121,7 +121,69 @@ function loadAndCompile(scenePath) {
         console.error(`⚠ renamed ${doc.__renames.length} duplicate layer name(s) to keep them unique — the exporter requires unique names: ${shown}${more}`);
     }
     for (const w of layoutWarnings(scene)) console.error('⚠ ' + w);
+    for (const w of glyphCoverageWarnings(scene, dirname(abs))) console.error('⚠ ' + w);
     return { scene, doc, abs };
+}
+
+// Parse a TTF/OTF cmap into the set of codepoints it covers (formats 4 and 12).
+function fontCoverage(path) {
+    let b;
+    try { b = readFileSync(path); } catch { return null; }
+    try {
+        const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+        const nt = dv.getUint16(4);
+        let off = 0;
+        for (let i = 0; i < nt; i++) { const o = 12 + i * 16; if (b.toString('latin1', o, o + 4) === 'cmap') { off = dv.getUint32(o + 8); break; } }
+        if (!off) return null;
+        const cov = new Set();
+        const ns = dv.getUint16(off + 2);
+        for (let i = 0; i < ns; i++) {
+            const so = off + dv.getUint32(off + 4 + i * 8 + 4);
+            const fmt = dv.getUint16(so);
+            if (fmt === 4) {
+                const segX2 = dv.getUint16(so + 6), sc = segX2 / 2;
+                const endO = so + 14, startO = endO + segX2 + 2, deltaO = startO + segX2, rangeO = deltaO + segX2;
+                for (let s = 0; s < sc; s++) {
+                    const end = dv.getUint16(endO + s * 2), st = dv.getUint16(startO + s * 2), d = dv.getUint16(deltaO + s * 2), ro = dv.getUint16(rangeO + s * 2);
+                    for (let c = st; c <= end && c !== 0xffff; c++) {
+                        let g; if (ro === 0) g = (c + d) & 0xffff; else { const gi = dv.getUint16(rangeO + s * 2 + ro + (c - st) * 2); g = gi === 0 ? 0 : (gi + d) & 0xffff; }
+                        if (g) cov.add(c);
+                    }
+                }
+            } else if (fmt === 12) {
+                const ng = dv.getUint32(so + 12);
+                for (let gi = 0; gi < ng; gi++) { const go = so + 16 + gi * 12, sc = dv.getUint32(go), ec = dv.getUint32(go + 4); for (let c = sc; c <= ec; c++) cov.add(c); }
+            }
+        }
+        return cov;
+    } catch { return null; }
+}
+
+// Warn when a text layer (or styled span) uses characters its font lacks — these
+// render as tofu OR crash the export, so catching them locally saves a render.
+function glyphCoverageWarnings(scene, sceneDir) {
+    const out = [];
+    const cache = new Map();
+    const cov = p => { if (!cache.has(p)) cache.set(p, fontCoverage(p)); return cache.get(p); };
+    const resolveFont = f => (f && (f[1] === ':' || f.startsWith('/'))) ? f : resolve(sceneDir, f);
+    const layerArrays = [scene.layers];
+    if (scene.comps && typeof scene.comps === 'object') for (const c of Object.values(scene.comps)) layerArrays.push(c?.layers);
+    for (const layers of layerArrays) for (const l of layers ?? []) {
+        if (l?.type !== 'text' || typeof l.text !== 'string' || !l.font) continue;
+        const checks = [[l.font, l.text]];
+        if (Array.isArray(l.styles)) {
+            const cps = [...l.text];
+            for (const s of l.styles) if (s.font && s.start != null && s.length != null)
+                checks.push([s.font, cps.slice(s.start, s.start + s.length).join('')]);
+        }
+        for (const [fontPath, txt] of checks) {
+            const c = cov(resolveFont(fontPath));
+            if (!c) continue;
+            const miss = [...new Set([...txt])].filter(ch => ch.codePointAt(0) > 32 && !c.has(ch.codePointAt(0)));
+            if (miss.length) out.push(`text "${l.name ?? '?'}" uses character(s) the font doesn't have: ${miss.slice(0, 8).map(ch => `${ch} (U+${ch.codePointAt(0).toString(16).toUpperCase()})`).join(', ')} — they render as tofu or crash the export. Use a font that covers them (e.g. a Noto family), a per-span \`font\`, or an ASCII substitute.`);
+        }
+    }
+    return out;
 }
 
 // Catch the two most common visual bugs from the scene's static boxes/timing:
