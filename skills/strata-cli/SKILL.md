@@ -32,6 +32,7 @@ My default is **not** "fullscreen image/video with text on top." Every layer has
 - **Multiple media at once:** two videos side by side, picture-in-picture, or a video occupying a third of the frame with colour shapes/solids filling the rest.
 - **Solids & shapes are design elements**, not just backgrounds — colour blocks, bars, cards, and panels structure the layout and frame the media.
 - **Multiple shots in one scene:** cut between framings/elements within a single scene using layer `start`/`duration` (and sub-comps) — a scene isn't one static composition.
+- **Use the whole frame — don't leave a dead third.** The most common amateur tell in my own output is content clustered top/middle with an empty bottom third. I balance the canvas: vertically centre the cluster, OR use a clear top/bottom structure (header up top, content centred, a **footer/CTA anchored on the bottom safe line ~88–92% down**). I fill empty space with intent — a subtle background gradient/shape, a baseline rule, or by scaling content up — never leave a flat empty band. (9:16 distributes naturally; landscape needs deliberate vertical balance.)
 The strongest videos change their composition beat to beat; I avoid repeating the same fullscreen-media-plus-caption frame.
 
 ## 3D & camera — VASCO's superpower (use it)
