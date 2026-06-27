@@ -482,11 +482,11 @@ Draw a line by sweeping a rectangular mask across a pre-drawn line image/solid p
 Give layers different z and drift the camera for instant depth.
 ```json
 { "type": "camera", "name": "cam", "animate": { "position": [ {"t":0,"v":[640,360,-1200],"ease":"inOutSine"}, {"t":4,"v":[700,360,-1000]} ] } },
-{ "type": "image", "name": "bg_far",  "src": "./bg.jpg",  "box": [0,0,1280,720], "is_3d": true, "position": [640,360,-400] },
-{ "type": "image", "name": "mid_card", "src": "./card.png","box": [340,180,600,360], "is_3d": true, "position": [640,360,-120] },
-{ "type": "text",  "name": "fg_title", "text": "Depth", "font": "./font-bold.ttf", "size": 120, "color": "#fff", "box": [0,300,1280,160], "align": "center middle", "is_3d": true, "position": [640,360,0] }
+{ "type": "image", "name": "bg_far",  "src": "./bg.jpg",  "box": [-200,-120,1680,960], "is_3d": true, "position": [0,0,-400] },
+{ "type": "image", "name": "mid_card", "src": "./card.png","box": [340,180,600,360], "is_3d": true, "position": [0,0,-120] },
+{ "type": "text",  "name": "fg_title", "text": "Depth", "font": "./font-bold.ttf", "size": 120, "color": "#fff", "box": [0,300,1280,160], "align": "center middle", "is_3d": true, "position": [0,0,0] }
 ```
-*(Near layers (z≈0) drift more than far ones (z negative) as the camera moves — true cinematic parallax. See SKILL.md "3D & camera".)*
+*(Near layers (z≈0) drift more than far ones (z negative) as the camera moves — true cinematic parallax. **`position` x,y are still a delta from the box — put depth in z and keep x,y `0`; the box positions the layer.** Oversize a far bg (negative z shrinks it by perspective, so a 1280-wide bg at z−400 won't fill the frame). See SKILL.md "3D & camera".)*
 
 ---
 

@@ -38,7 +38,7 @@ The strongest videos change their composition beat to beat; I avoid repeating th
 ## 3D & camera — VASCO's superpower (use it)
 This is what separates a flat template from a film. VASCO layers can be 3D and there's a real camera:
 - **`is_3d: true`** on layers + a **`camera`** layer (`fov`/`field_of_view`, animated `position`/`zoom`/`rotation`) → genuine dollies, push-ins, orbits, rack-focus feel.
-- **Parallax with depth:** give layers different **z** (third value in `position`/`anchor`, e.g. `[960,540,-400]`) and move the camera — near and far layers drift at different rates. Instant cinematic depth.
+- **Parallax with depth:** give layers different **z** and move the camera — near and far layers drift at different rates. Instant cinematic depth. **Put depth in z and keep `position` x,y at `0`** (it's still a delta from the box — `position:[0,0,-400]`, not `[960,540,-400]`, which would shove the layer off-centre). Oversize a far bg, since negative z shrinks it by perspective.
 - **Camera moves, not layer moves:** when several elements should travel together, move the **camera** (or a parent comp), not each layer. A slow camera push under a settling title reads premium.
 - **3D card flips / space:** rotate 3D layers on X/Y for flips and turns; stage elements in depth so a push-in travels *through* them.
 - See the **Camera** and **3D** keys in `format.md`. Reach for depth/camera whenever a beat feels flat.
