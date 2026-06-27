@@ -23,7 +23,7 @@ A name/title strip for the bottom-left. Solid bar + two text lines.
   { "type": "text", "name": "lt_title", "text": "Head of Design", "font": "./font.ttf", "size": 26, "color": "#9aa3bf", "box": [28, 92, 580, 36], "align": "left middle" }
 ] } }
 ```
-Instance: `{ "type":"comp","comp":"lower_third","name":"lt_inst","box":[80,860,760,150],"start":1,"duration":4,"animate":{"position":[{"t":0,"v":[80,920],"ease":"outCubic"},{"t":0.5,"v":[80,860]}],"opacity":[{"t":0,"v":0},{"t":0.4,"v":1},{"t":3.6,"v":1},{"t":4,"v":0}]} }`
+Instance (note `position` is a **delta from the box**, not absolute — rise 60px → settle): `{ "type":"comp","comp":"lower_third","name":"lt_inst","box":[80,860,760,150],"start":1,"duration":4,"animate":{"position":[{"t":0,"v":[0,60],"ease":"outCubic"},{"t":0.5,"v":[0,0]}],"opacity":[{"t":0,"v":0},{"t":0.4,"v":1},{"t":3.6,"v":1},{"t":4,"v":0}]} }`
 
 ### stat-card
 A big number + label on a card. Animate the number with a count-up (see recipes).
