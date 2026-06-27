@@ -256,6 +256,11 @@ class Compiler {
             if (l.text !== undefined) { out.text = l.text; handled.add('text'); }
             if (l.size !== undefined) { out.font_size = l.size; handled.add('size'); }
             if (l.min_size !== undefined) { out.min_font_size = l.min_size; handled.add('min_size'); }
+            // Auto-fit text to its box by default (matches Idomoo authoring): a long
+            // value — e.g. a personalized name — scales down instead of overflowing.
+            // Opt out with "shrink": false. min_font_size -1 = no hard floor.
+            out.shrink = l.shrink ?? true; handled.add('shrink');
+            if (out.min_font_size === undefined) out.min_font_size = -1;
             if (l.align !== undefined) { out.alignment = parseAlign(l.align); handled.add('align'); }
             if (l.color !== undefined) { out.color = color(l.color, 3); handled.add('color'); }
             if (l.styles !== undefined) {
