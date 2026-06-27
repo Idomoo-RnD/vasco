@@ -150,14 +150,21 @@ function layoutWarnings(scene) {
             if (outside && l.position === undefined && !(l.animate && l.animate.position))
                 out.push(`comp "${cn}": text "${l.name ?? '?'}" box extends outside the ${cw}×${ch} frame — it may be clipped. Keep text inside the frame (title-safe ~90%).`);
         }
-        const texts = items.filter(x => x.l.type === 'text');
-        for (let i = 0; i < texts.length; i++) for (let j = i + 1; j < texts.length; j++) {
-            const a = texts[i], b = texts[j];
-            if (a.end <= b.start || b.end <= a.start) continue;
-            const minArea = Math.min(a.box.w * a.box.h, b.box.w * b.box.h);
-            if (minArea > 0 && interArea(a.box, b.box) / minArea > 0.35)
-                out.push(`comp "${cn}": text layers "${a.l.name ?? '?'}" and "${b.l.name ?? '?'}" overlap on screen while both visible — likely unreadable. Separate them in space or stagger their timing.`);
-        }
+        // Overlap among "content" layers of the same kind: text↔text (unreadable)
+        // and block↔block (stacked sub-comp instances). Solids/images are excluded
+        // (they're usually backgrounds/frames) and text-over-block is normal layering.
+        const overlapPairs = (kind, noun, fix) => {
+            const g = items.filter(x => x.l.type === kind);
+            for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
+                const a = g[i], b = g[j];
+                if (a.end <= b.start || b.end <= a.start) continue;
+                const minArea = Math.min(a.box.w * a.box.h, b.box.w * b.box.h);
+                if (minArea > 0 && interArea(a.box, b.box) / minArea > 0.35)
+                    out.push(`comp "${cn}": ${noun} "${a.l.name ?? '?'}" and "${b.l.name ?? '?'}" overlap on screen while both visible — ${fix}`);
+            }
+        };
+        overlapPairs('text', 'text layers', 'likely unreadable. Separate them in space or stagger their timing.');
+        overlapPairs('comp', 'blocks', 'they stack on top of each other. Give each a distinct box, or stagger their timing.');
     }
     return out;
 }
@@ -850,7 +857,21 @@ async function main() {
                 for (const l of arr) if (l?.name) used.add(l.name);
             let inst = `${ck}_inst`, j = 2;
             while (used.has(inst)) inst = `${ck}_inst_${j++}`;
-            scene.layers.push({ type: 'comp', comp: ck, name: inst, box: block.box, start: 0, duration: block.comp.duration,
+            // tile a repeated block beside earlier ones (wrap to next row) so blocks
+            // don't stack — the agent then fine-tunes the layout.
+            const cw = scene.width ?? 1920, ch = scene.height ?? 1080;
+            let box = [...block.box];
+            const taken = scene.layers.filter(l => l?.type === 'comp' && Array.isArray(l.box)).map(l => l.box);
+            const hits = bx => taken.some(t =>
+                Math.max(0, Math.min(bx[0] + bx[2], t[0] + t[2]) - Math.max(bx[0], t[0])) > 0 &&
+                Math.max(0, Math.min(bx[1] + bx[3], t[1] + t[3]) - Math.max(bx[1], t[1])) > 0);
+            const gap = 40;
+            for (let guard = 0; hits(box) && guard < 50; guard++) {
+                box[0] += box[2] + gap;
+                if (box[0] + box[2] > cw) { box[0] = block.box[0]; box[1] += box[3] + gap; }
+                if (box[1] + box[3] > ch) break;
+            }
+            scene.layers.push({ type: 'comp', comp: ck, name: inst, box, start: 0, duration: block.comp.duration,
                 animate: { opacity: [{ t: 0, v: 0 }, { t: 0.4, v: 1 }] } });
             writeFileSync(resolve(scenePath), JSON.stringify(scene, null, 2));
             if (JSON_MODE) out({ ok: true, block: args[1], comp: ck, instance: inst, scene: scenePath });
