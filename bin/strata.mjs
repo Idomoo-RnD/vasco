@@ -219,7 +219,11 @@ function layoutWarnings(scene) {
             const g = items.filter(x => x.l.type === kind);
             for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
                 const a = g[i], b = g[j];
-                if (a.end <= b.start || b.end <= a.start) continue;
+                // Substantial CO-VISIBILITY required — a brief crossfade between two
+                // sequential reveals at the same spot is fine, not an overlap bug.
+                const coVisible = Math.min(a.end, b.end) - Math.max(a.start, b.start);
+                const shorter = Math.min(a.end - a.start, b.end - b.start);
+                if (coVisible <= 0 || shorter <= 0 || coVisible / shorter < 0.5) continue;
                 const minArea = Math.min(a.box.w * a.box.h, b.box.w * b.box.h);
                 if (minArea > 0 && interArea(a.box, b.box) / minArea > 0.35)
                     out.push(`comp "${cn}": ${noun} "${a.l.name ?? '?'}" and "${b.l.name ?? '?'}" overlap on screen while both visible — ${fix}`);
