@@ -44,7 +44,8 @@ Generate narration first, then pace beats to its word timings.
 ## Overlay an existing video (lower-thirds / captions / callouts)
 - Put the source MP4 as a full-frame `video` layer at the back (`loop:false`; size the scene to the clip).
 - Add `lower-third` blocks, callout chips, or a logo bug **on top**, timed to moments in the footage.
-- Don't recolour the footage — the graphics are the only addition. Drop a subtle `solid` scrim only where text sits over busy areas.
+- Don't recolour the footage — the graphics are the only addition. Drop a `solid` scrim where text sits over busy areas.
+- **Match the scrim to the footage brightness** so captions stay legible. A 45%-black scrim over **bright** footage (e.g. a white UI screen) only makes mid-grey — white text on it is low-contrast. Over bright/unknown footage use a near-opaque scrim (opacity ~0.7–0.85) or **dark** text; over dark footage a light/low-opacity scrim with light text is enough. Aim for clearly-readable contrast (WCAG ~4.5:1). When the footage brightness varies under the text, prefer a solid caption bar over a faint scrim.
 
 ---
 **Always:** run it through the storyboard stage for sign-off; give every layer a unique name; verify the poster before calling it done (`strata snapshot`).
