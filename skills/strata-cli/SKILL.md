@@ -1,6 +1,6 @@
 ---
 name: strata-cli
-description: Author cinematic, creative motion-design videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. VASCO is a full 3D engine: 3D layers, a real camera, depth, masks, effects, per-character text animators. Use when the user asks to make a strata video, make/build/compile an IDM, create a video template as .idm, build a motion-graphics / kinetic-text / title-sequence / explainer / promo / personalized or data-driven video, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers with tweens/keyframes. Not for the Idomoo cloud briefs/blueprints API.
+description: Author cinematic, creative motion-design videos with the `strata` CLI — write a compact scene JSON, compile it to a binary `.idm` locally, generate assets (image, image-to-video, narration, music) via the Idomoo AI API, and render to MP4. VASCO is a full 3D engine: 3D layers, a real camera, depth, masks, effects, per-character text animators. Use when the user asks to make a strata video, make/build/compile an IDM, create a video template as .idm, build a motion-graphics / kinetic-text / title-sequence / explainer / promo / personalized or data-driven video, work with VASCO locally, render an IDM to MP4, generate video assets, or animate layers with tweens/keyframes. ALSO use whenever generating an image — including when the user wants to use a reference image / images (a brand character, logo, product photo, style frame, or a prior generation) to control art style, a recurring character, or composition; pass them as `--reference` and index them in the prompt (image 0, image 1, …). Not for the Idomoo cloud briefs/blueprints API.
 ---
 
 # Strata CLI — cinematic motion design, authored as IDM/VASCO
@@ -115,7 +115,7 @@ The CLI creates media via the Idomoo AI API (needs auth; saves to `./strata_asse
 
 | command | makes |
 |---|---|
-| `strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>]` | a still PNG (async) |
+| `strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <img\|url> …]` | a still PNG (async) — `--reference` is repeatable for art-style/character refs (see below) |
 | `strata generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** clip from a still (async) |
 | `strata generate narration "<text>" --voice <voice_id>` | TTS voiceover MP3 (`strata generate voices` lists ids) |
 | `strata generate music "<prompt>" [--duration 30]` | an instrumental track |
@@ -123,6 +123,23 @@ The CLI creates media via the Idomoo AI API (needs auth; saves to `./strata_asse
 Chain: **image → animate into video → narration + music**, then point `src` at the saved files.
 
 **Whenever I generate an image, I ask the user: animate it into a video (image-to-video) or keep it as a still?** I never decide silently — I generate the image, show/point to it, and ask before moving on. Motion usually wins for hero shots and backgrounds (a still that never moves reads as a slideshow), but it's the user's call per image.
+
+### Reference images — art style, characters, consistency (use on EVERY image)
+`generate image` takes **`--reference`** (repeatable; each value is a **URL or a local file path** — local files are auto-encoded, no upload step). They steer the result toward a look, a character, a logo, or a composition. **Every time I make an image I consider references**, and I *always* use them when:
+- the user gives me an image — a brand character, mascot, logo, product photo, a style frame, or a previous generation — and wants that look/subject, **or**
+- I need a **recurring character or a consistent art style across multiple shots**: I generate every shot from the same reference(s) so they stay on-model (pure text prompts drift shot to shot).
+
+**How to drive them — index in the PROMPT.** References are numbered by order: the first `--reference` is **image 0**, the second **image 1**, etc. Cite the index in the prompt:
+- *"using **image 0**'s art style, draw a dog"* — style transfer onto a new subject.
+- *"put the character from **image 1** into **image 0**'s scene"* — combine across references.
+
+**Verified behaviour (tested):**
+- A single reference transfers its **character + palette + art style** faithfully (e.g. an orange one-eyed mascot → same mascot on a skateboard). It reproduces the *subject* strongly — to draw a **new** subject in that look, say "using image 0's **style**…", not just "image 0".
+- **Multiple references compose** — pass several and they combine (two characters in one frame, or "image 0's character in image 1's palette").
+- When several refs compete, **be explicit per index** so one wins: add *"do not use image 1's colours"* etc. Soft phrasing lets the first/dominant ref take over.
+- Local **PNG/JPG/WebP** files work directly; so do hosted URLs (including earlier `strata`-generated images).
+
+Examples: `strata generate image "using image 0's art style, draw a dog" --reference ./mascot.png` · multi: `… --reference ./char.png --reference ./bg_style.jpg`
 
 ## Workflow
 1. **Sort out assets first.** For each visual element I ask: (a) do they have a file or should I `generate` it, and (b) **still image or moving video** — motion reads as motion-graphics, so I favour video/animated stills for hero moments. I ask about **narration**/music too. Text layers need a real `.ttf`/`.otf`.

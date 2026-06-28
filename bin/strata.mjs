@@ -43,6 +43,15 @@ function opt(name, dflt) {
     const i = args.indexOf(name);
     return i >= 0 && args[i + 1] ? args[i + 1] : dflt;
 }
+// All values for a repeatable flag (e.g. `--reference a --reference b`), each
+// also split on commas so `--reference a,b` works too.
+function optAll(...names) {
+    const vals = [];
+    for (let i = 0; i < args.length; i++)
+        if (names.includes(args[i]) && args[i + 1] && !args[i + 1].startsWith('-'))
+            vals.push(...args[i + 1].split(',').map(s => s.trim()).filter(Boolean));
+    return vals;
+}
 function out(obj, human) {
     if (JSON_MODE) console.log(JSON.stringify(obj, null, 2));
     else console.log(human ?? JSON.stringify(obj, null, 2));
@@ -634,7 +643,8 @@ async function main() {
             if (!SUBS.includes(sub))
                 fail(`Usage: strata generate <image|video|narration|music|voices> ...
   strata generate voices [--search <text>] [--json]
-  strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <url>] [-o file | --out-dir dir]
+  strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <img|url> ...] [-o file | --out-dir dir]
+     --reference is repeatable (URL or local file) for art-style/character refs; index them in the prompt (image 0, image 1, …)
   strata generate video <image-url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
   strata generate narration "<text>" --voice <voice_id> [-o file | --out-dir dir]
   strata generate music "<prompt>" [--duration 30] [-o file | --out-dir dir]`);
@@ -676,13 +686,29 @@ async function main() {
             try {
                 if (sub === 'image') {
                     const prompt = args[2];
-                    if (!prompt || prompt.startsWith('-')) fail('Usage: strata generate image "<prompt>" [--aspect 9:16] ...');
+                    if (!prompt || prompt.startsWith('-')) fail('Usage: strata generate image "<prompt>" [--aspect 9:16] [--reference img|url ...] ...');
+                    // Reference images for art-style / character / composition transfer.
+                    // Repeatable (and comma-splittable); each is a URL (sent as-is) or a
+                    // local file (read + base64 data-URI). Index them in the PROMPT, e.g.
+                    // "using image 0's art style, draw a dog". Sent as the `images` array.
+                    const refs = optAll('--reference', '--ref', '--image');
+                    const images = refs.map(r => {
+                        if (/^https?:\/\//i.test(r) || /^data:/i.test(r)) return r;
+                        let buf;
+                        try { buf = readFileSync(resolve(r)); }
+                        catch { fail(`reference image not found: ${r}`, 2); }
+                        const ext = (r.split('.').pop() || '').toLowerCase();
+                        const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+                            : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/png';
+                        return `data:${mime};base64,${buf.toString('base64')}`;
+                    });
+                    if (images.length) ctx.log(`${images.length} reference image(s) — index them in the prompt as image 0..${images.length - 1}`);
                     const url = await generateImage({
                         prompt, aspect: opt('--aspect', '1:1'), colors: opt('--colors'),
-                        referenceImage: opt('--reference'),
+                        images: images.length ? images : undefined,
                     }, ctx);
                     const path = await saveAsset(url, 'image.png');
-                    out({ ok: true, type: 'image', path, url }, `✅ saved ${path}\n   url: ${url}`);
+                    out({ ok: true, type: 'image', path, url, references: images.length }, `✅ saved ${path}\n   url: ${url}`);
                 } else if (sub === 'video') {
                     const imageUrl = args[2];
                     if (!imageUrl || imageUrl.startsWith('-')) fail('Usage: strata generate video <image-url> [--prompt "..."] [--duration 5] ...');
