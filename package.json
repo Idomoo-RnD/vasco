@@ -1,6 +1,6 @@
 {
   "name": "strata-cli",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "description": "Author Idomoo IDM videos from compact scene JSON — tween engine, effects, masks — compiled locally, rendered to MP4 via the Idomoo API",
   "type": "module",
   "bin": {

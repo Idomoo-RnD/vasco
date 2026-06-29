@@ -52,6 +52,19 @@ function optAll(...names) {
             vals.push(...args[i + 1].split(',').map(s => s.trim()).filter(Boolean));
     return vals;
 }
+// An image input for the AI API: a URL/data-URI is passed through; a local file
+// path is read and base64-encoded into a data-URI (the endpoints accept both, so
+// references and image-to-video work off local files with no upload step).
+function toImageInput(r, what = 'image') {
+    if (/^https?:\/\//i.test(r) || /^data:/i.test(r)) return r;
+    let buf;
+    try { buf = readFileSync(resolve(r)); }
+    catch { fail(`${what} not found: ${r}`, 2); }
+    const ext = (r.split('.').pop() || '').toLowerCase();
+    const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+        : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/png';
+    return `data:${mime};base64,${buf.toString('base64')}`;
+}
 function out(obj, human) {
     if (JSON_MODE) console.log(JSON.stringify(obj, null, 2));
     else console.log(human ?? JSON.stringify(obj, null, 2));
@@ -319,7 +332,8 @@ async function isSeaBinary() {
 const SKILL_NAME = 'strata-cli';
 const LEGACY_SKILL_NAMES = ['idm-cli', 'idm-maker'];
 const SKILL_FILES = ['SKILL.md', 'references/format.md', 'references/recipes.md',
-    'references/blocks.md', 'references/blueprints.md', 'references/personalization.md'];
+    'references/blocks.md', 'references/blueprints.md', 'references/personalization.md',
+    'references/assets.md'];
 
 // Load the skill files: prefer the repo checkout (dev — instant, offline), else
 // fetch the published copy from main (SEA binary has no bundled skills/).
@@ -645,7 +659,8 @@ async function main() {
   strata generate voices [--search <text>] [--json]
   strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <img|url> ...] [-o file | --out-dir dir]
      --reference is repeatable (URL or local file) for art-style/character refs; index them in the prompt (image 0, image 1, …)
-  strata generate video <image-url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
+  strata generate video <image|url> [--prompt "..."] [--duration 5] [--ratio 9:16] [-o file | --out-dir dir]
+     <image> is a local file (auto-encoded) or a URL — e.g. the url printed by "generate image"
   strata generate narration "<text>" --voice <voice_id> [-o file | --out-dir dir]
   strata generate music "<prompt>" [--duration 30] [-o file | --out-dir dir]`);
 
@@ -692,16 +707,7 @@ async function main() {
                     // local file (read + base64 data-URI). Index them in the PROMPT, e.g.
                     // "using image 0's art style, draw a dog". Sent as the `images` array.
                     const refs = optAll('--reference', '--ref', '--image');
-                    const images = refs.map(r => {
-                        if (/^https?:\/\//i.test(r) || /^data:/i.test(r)) return r;
-                        let buf;
-                        try { buf = readFileSync(resolve(r)); }
-                        catch { fail(`reference image not found: ${r}`, 2); }
-                        const ext = (r.split('.').pop() || '').toLowerCase();
-                        const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
-                            : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/png';
-                        return `data:${mime};base64,${buf.toString('base64')}`;
-                    });
+                    const images = refs.map(r => toImageInput(r, 'reference image'));
                     if (images.length) ctx.log(`${images.length} reference image(s) — index them in the prompt as image 0..${images.length - 1}`);
                     const url = await generateImage({
                         prompt, aspect: opt('--aspect', '1:1'), colors: opt('--colors'),
@@ -710,8 +716,10 @@ async function main() {
                     const path = await saveAsset(url, 'image.png');
                     out({ ok: true, type: 'image', path, url, references: images.length }, `✅ saved ${path}\n   url: ${url}`);
                 } else if (sub === 'video') {
-                    const imageUrl = args[2];
-                    if (!imageUrl || imageUrl.startsWith('-')) fail('Usage: strata generate video <image-url> [--prompt "..."] [--duration 5] ...');
+                    const src = args[2];
+                    if (!src || src.startsWith('-')) fail('Usage: strata generate video <image|url> [--prompt "..."] [--duration 5] ...');
+                    // Accept a hosted URL or a local image file (auto-base64), same as --reference.
+                    const imageUrl = toImageInput(src, 'image');
                     const url = await animateImage({
                         imageUrl, prompt: opt('--prompt'),
                         duration: Number(opt('--duration', '5')), ratio: opt('--ratio'),

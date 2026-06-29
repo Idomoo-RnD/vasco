@@ -115,31 +115,16 @@ The CLI creates media via the Idomoo AI API (needs auth; saves to `./strata_asse
 
 | command | makes |
 |---|---|
-| `strata generate image "<prompt>" [--aspect 9:16] [--colors "#a,#b"] [--reference <img\|url> …]` | a still PNG (async) — `--reference` is repeatable for art-style/character refs (see below) |
-| `strata generate video <image-url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** clip from a still (async) |
-| `strata generate narration "<text>" --voice <voice_id>` | TTS voiceover MP3 (`strata generate voices` lists ids) |
+| `strata generate image "<prompt>" [--aspect 9:16] [--colors …] [--reference <img\|url> …]` | a still PNG (async) |
+| `strata generate video <image\|url> [--prompt "<motion>"] [--duration 5] [--ratio 9:16]` | an **image-to-video** clip (async) |
+| `strata generate narration "<text>" --voice <voice_id>` | TTS voiceover MP3 (`generate voices` lists ids) |
 | `strata generate music "<prompt>" [--duration 30]` | an instrumental track |
 
-Chain: **image → animate into video → narration + music**, then point `src` at the saved files.
+Chain: **image → animate into video → narration + music**, then point `src`/`audio` at the saved files. Image and image-to-video accept a **local file or a URL** (local files are auto-encoded — no upload).
 
-**Whenever I generate an image, I ask the user: animate it into a video (image-to-video) or keep it as a still?** I never decide silently — I generate the image, show/point to it, and ask before moving on. Motion usually wins for hero shots and backgrounds (a still that never moves reads as a slideshow), but it's the user's call per image.
-
-### Reference images — art style, characters, consistency (use on EVERY image)
-`generate image` takes **`--reference`** (repeatable; each value is a **URL or a local file path** — local files are auto-encoded, no upload step). They steer the result toward a look, a character, a logo, or a composition. **Every time I make an image I consider references**, and I *always* use them when:
-- the user gives me an image — a brand character, mascot, logo, product photo, a style frame, or a previous generation — and wants that look/subject, **or**
-- I need a **recurring character or a consistent art style across multiple shots**: I generate every shot from the same reference(s) so they stay on-model (pure text prompts drift shot to shot).
-
-**How to drive them — index in the PROMPT.** References are numbered by order: the first `--reference` is **image 0**, the second **image 1**, etc. Cite the index in the prompt:
-- *"using **image 0**'s art style, draw a dog"* — style transfer onto a new subject.
-- *"put the character from **image 1** into **image 0**'s scene"* — combine across references.
-
-**Verified behaviour (tested):**
-- A single reference transfers its **character + palette + art style** faithfully (e.g. an orange one-eyed mascot → same mascot on a skateboard). It reproduces the *subject* strongly — to draw a **new** subject in that look, say "using image 0's **style**…", not just "image 0".
-- **Multiple references compose** — pass several and they combine (two characters in one frame, or "image 0's character in image 1's palette").
-- When several refs compete, **be explicit per index** so one wins: add *"do not use image 1's colours"* etc. Soft phrasing lets the first/dominant ref take over.
-- Local **PNG/JPG/WebP** files work directly; so do hosted URLs (including earlier `strata`-generated images).
-
-Examples: `strata generate image "using image 0's art style, draw a dog" --reference ./mascot.png` · multi: `… --reference ./char.png --reference ./bg_style.jpg`
+**Two rules I always follow when generating media — details in [references/assets.md](references/assets.md):**
+- **Still vs video:** whenever I make an image, I show it and **ask the user — animate it into a video or keep it as a still?** I never decide silently (motion usually wins for hero shots/backgrounds).
+- **Reference images:** `generate image --reference <img|url>` (repeatable, local file or URL) steers **art style / character / composition**. I use it on **every** image where the user gives me an image (brand character, logo, product, style frame, prior render) or needs a **consistent character/style across shots** — same reference(s) every shot so they stay on-model. I **index them in the prompt** — the 1st `--reference` is `image 0`, the 2nd `image 1` — e.g. *"using image 0's art style, draw a dog"*. See assets.md for style-vs-copy and multi-reference phrasing.
 
 ## Workflow
 1. **Sort out assets first.** For each visual element I ask: (a) do they have a file or should I `generate` it, and (b) **still image or moving video** — motion reads as motion-graphics, so I favour video/animated stills for hero moments. I ask about **narration**/music too. Text layers need a real `.ttf`/`.otf`.
@@ -185,6 +170,7 @@ Commands: `compile` · `validate` · `inspect` · `generate image|video|narratio
 ---
 
 # References
+- **[references/assets.md](references/assets.md)** — generating media: `generate image` (+**reference images** for art style/character/composition — index them in the prompt), `generate video` (image-to-video), narration, music; local-file/base64 support and the still-vs-video rule. **I open this whenever I generate an image or use reference images.**
 - **[references/format.md](references/format.md)** — the full technical spec: every layer key, 3D & camera params, effects (blur/shadow/glow/stroke/overlay/corner-pin), masks (rect/ellipse/path + morphing), track mattes, sub-comps, rich-text styles, per-character animators, asset generation, and the glyph-coverage check. **I open this for any syntax question.**
 - **[references/recipes.md](references/recipes.md)** — paste-ready, engine-correct patterns (kinetic text, transitions, motion, masks, special FX, 3D, camera, and **data-viz**: count-up, bar chart, progress ring, stat bar, line draw, parallax). **I start from a recipe instead of re-deriving.**
 - **[references/blocks.md](references/blocks.md)** — reusable sub-comp **blocks** (lower-third, stat-card, end-card, logo-sting, device-frame, search-bar, quote-card). I reuse a block via `strata add <block> scene.json` instead of building from scratch.
